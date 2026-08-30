@@ -1,0 +1,932 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>芙宁娜 · 桌面宠物</title>
+    <style>
+        html, body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            /* 桌面宠物：背景完全透明，仅保留模型本身 */
+            background: transparent;
+        }
+        #canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+        /* 对话输出框：显示在桌宠头顶上方（位置由 placeChatUI 按模型头部动态计算，
+           left 水平居中、bottom 从窗口底部向上量），Liquid Glass 毛玻璃质感，
+           闲置约 3 秒无鼠标/键盘交互自动淡出 */
+        #bubble {
+            position: fixed;
+            bottom: 200px; /* 兜底值，实际由 JS 动态设置 */
+            max-width: min(300px, calc(100vw - 24px));
+            max-height: 150px;
+            overflow-y: auto;
+            padding: 10px 14px;
+            font-size: 13px;
+            line-height: 1.5;
+            color: rgba(255, 255, 255, 0.95);
+            text-align: left;
+            font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+            border-radius: 16px;
+            background: linear-gradient(150deg, rgba(55, 65, 88, 0.42), rgba(24, 32, 46, 0.34));
+            backdrop-filter: blur(24px) saturate(180%);
+            -webkit-backdrop-filter: blur(24px) saturate(180%);
+            border: 1px solid rgba(255, 255, 255, 0.28);
+            box-shadow: 0 12px 34px rgba(0, 0, 0, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.22);
+            opacity: 0;
+            transform: translateX(-50%) translateY(8px);
+            transition: opacity 0.35s cubic-bezier(0.22, 1, 0.36, 1), transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+            pointer-events: none;
+            z-index: 10;
+        }
+        #bubble::after {
+            content: "";
+            position: absolute;
+            bottom: -8px;
+            left: 24px;
+            border-width: 8px 8px 0;
+            border-style: solid;
+            border-color: rgba(40, 48, 66, 0.4) transparent transparent;
+        }
+        #bubble.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+        /* 聊天输入框：点击桌宠后叠加显示在脚部区域（图层在模型之上），
+           left 由 JS 按模型中心动态设置，translateX(-50%) 居中 */
+        #chatBox {
+            position: fixed;
+            bottom: 24px;
+            width: min(300px, calc(100vw - 24px));
+            transform: translateX(-50%);
+            display: none;
+            z-index: 20;
+        }
+        #chatBox.show { display: block; }
+        #chatInput {
+            width: 100%;
+            padding: 12px 16px;
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.96);
+            caret-color: rgba(255, 255, 255, 0.9);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 14px;
+            outline: none;
+            background: linear-gradient(150deg, rgba(55, 65, 88, 0.42), rgba(24, 32, 46, 0.34));
+            backdrop-filter: blur(22px) saturate(180%);
+            -webkit-backdrop-filter: blur(22px) saturate(180%);
+            box-shadow: 0 12px 34px rgba(0, 0, 0, 0.26), inset 0 1px 0 rgba(255, 255, 255, 0.22);
+            font-family: inherit;
+        }
+        #chatInput::placeholder { color: rgba(255, 255, 255, 0.55); }
+        #chatInput:focus { border-color: rgba(255, 255, 255, 0.55); }
+    </style>
+    <!-- 关键：先把 pixi.js 裸模块名映射到本地自包含的 pixi.min.mjs -->
+    <script type="importmap">
+        {
+            "imports": {
+                "pixi.js": "./lib/pixi.min.mjs"
+            }
+        }
+    </script>
+</head>
+<body>
+    <canvas id="canvas"></canvas>
+    <div id="bubble"></div>
+    <div id="chatBox"><input type="text" id="chatInput" placeholder="想对芙宁娜说点什么…（回车发送）" maxlength="300" /></div>
+
+    <!-- 1. 先加载 Cubism5 Core（必须作为全局脚本，且必须在 pixi-live2d5 之前） -->
+    <script src="./lib/live2dcubismcore.min.js"></script>
+
+    <script type="module">
+        // 把 PIXI 暴露到 window，插件自动通过 window.PIXI.Ticker 更新模型
+        import * as PIXI from "pixi.js";
+        import { Live2DModel, config } from "./lib/pixi-live2d5.es.js";
+
+        window.PIXI = PIXI;
+
+        // 指向本目录下的 GLSL shader
+        config.cubism5ShaderPath = "./model/shaders/";
+        config.logLevel = "warning";
+        // 静默 Cubism SDK 内部日志（含蒙版超限等无关紧要的输出）
+        config.cubism5 = { logLevel: 5 };
+
+        (async function () {
+            try {
+                // 先读取配置：输出分辨率（renderScale）需要在创建渲染器之前确定
+                let cfg = { modelWidth: 420, modelHeight: 620, physicsStrength: 1.0, renderScale: 1 };
+                try {
+                    const r = await fetch("/api/settings");
+                    cfg = await r.json();
+                } catch (e) {
+                    console.warn("[模型] 读取配置失败，使用默认值", e && e.message);
+                }
+
+                const app = new PIXI.Application();
+
+                await app.init({
+                    canvas: document.getElementById("canvas"),
+                    resizeTo: window,
+                    preference: "webgl",
+                    preferWebGLVersion: 2,
+                    backgroundAlpha: 0,
+                    antialias: true,
+                    autoDensity: true,
+                    // 输出分辨率 = 设备像素比 × 用户设定的清晰度倍率（renderScale 1×~2×）
+                    resolution: Math.min(window.devicePixelRatio || 1, 2) * (Number(cfg.renderScale) || 1),
+                });
+
+                const model = await Live2DModel.from("./model/model3.json");
+
+                app.stage.addChild(model);
+
+                // 隐藏「仅供娱乐」胸牌：
+                // 通过 Part 层级定位「牌子+表情.psd」(Part186) 与「牌子」(Part187) 两个部件，
+                // 把它们名下的所有 ArtMesh 每帧强制写透明度 0。
+                // 注意：透明度必须在模型更新(model.update)之后、渲染之前覆盖才有效，
+                // 这里挂在 app.ticker 上，PIXI 会在同帧渲染前执行，故不会被模型更新覆盖。
+                const coreModel = model.internalModel.coreModel; // CubismModel 实例
+                const BADGE_PARTS = ["Part186", "Part187"];
+                const badgePartIdx = new Set();
+                for (let p = 0; p < coreModel.getPartCount(); p++) {
+                    const id = coreModel.getPartId(p).getString();
+                    if (BADGE_PARTS.includes(id)) badgePartIdx.add(p);
+                }
+                const HIDE_DRAWABLES = [];
+                for (let d = 0; d < coreModel.getDrawableCount(); d++) {
+                    if (badgePartIdx.has(coreModel.getDrawableParentPartIndex(d))) {
+                        HIDE_DRAWABLES.push(d);
+                    }
+                }
+                console.info("[胸牌] 待隐藏 ArtMesh:", HIDE_DRAWABLES.join(","));
+                // 关键：Live2D 模型的更新与绘制都在 render() 内顺序执行（model.update→draw），
+                // 若把覆盖挂在 PIXI ticker 上，会被 render 里的 model.update() 重算透明度覆盖。
+                // 因此这里包装 internalModel.update：模型更新一完成、绘制之前立即强制隐藏胸牌。
+                const internalModel = model.internalModel;
+                const _origInternalUpdate = internalModel.update.bind(internalModel);
+                let lastModelNow = 0;  // 最近一帧 internalModel.update 的 now（毫秒），供摸头动画计时
+                let headPat = null;    // 摸头动画状态：{ start, duration, amplitude, bounces }
+                function startHeadPat() {
+                    headPat = { start: lastModelNow, duration: 1.2, amplitude: 0.18, bounces: 6 };
+                }
+                internalModel.update = (dt, now) => {
+                    lastModelNow = now;
+                    _origInternalUpdate(dt, now);
+                    const op = coreModel.getModel().drawables.opacities;
+                    for (const d of HIDE_DRAWABLES) op[d] = 0;
+                    // 摸头动画：以「点头 + 轻微歪头」的衰减正弦模拟被摸头时低头回弹
+                    // 在模型更新完成后直接写参数，避免被模型自身的更新覆盖。
+                    if (headPat) {
+                        const t = (now - headPat.start) / 1000;
+                        if (t >= headPat.duration) {
+                            headPat = null;
+                            coreModel.setParameterValueById("ParamAngleZ", 0, 1);
+                            coreModel.setParameterValueById("ParamAngleX", 0, 1);
+                        } else {
+                            const p = t / headPat.duration;
+                            const decay = Math.pow(1 - p, 1.6);
+                            const ang = Math.sin(p * Math.PI * headPat.bounces) * headPat.amplitude * decay;
+                            coreModel.setParameterValueById("ParamAngleZ", ang, 1);
+                            coreModel.setParameterValueById("ParamAngleX", ang * 0.5, 1);
+                        }
+                    }
+                };
+
+                // 应用物理强度：让待机时衣服/头发飘动更明显。
+                // 三重放大：① 输出混合权重 weight（封顶100=全量输出，解决原权重<100时效果被削减的问题）；
+                // ② 输出缩放 scale（直接线性放大物理摆动幅度，最直观有效）；
+                // ③ 粒子加速度 acceleration（增强布料对外部输入的响应，让飘动更活泼）。
+                try {
+                    const ph = model.internalModel.physics;
+                    if (ph && ph._physicsRig && ph._physicsRig.outputs) {
+                        const s = Number(cfg.physicsStrength) || 1;
+                        if (s !== 1) {
+                            const rig = ph._physicsRig;
+                            for (const o of rig.outputs) {
+                                o.weight = Math.min(100, o.weight * s);
+                                if (o.translationScale) {
+                                    o.translationScale.x *= s;
+                                    o.translationScale.y *= s;
+                                }
+                                o.angleScale *= s;
+                            }
+                            if (rig.particles) {
+                                for (const p of rig.particles) p.acceleration *= s;
+                            }
+                        }
+                        console.info("[物理] 强度 =", s);
+                    } else {
+                        console.warn("[物理] 未找到物理引擎实例");
+                    }
+                } catch (e) { console.warn("[物理] 调整失败", e && e.message); }
+
+                // 记录模型原始尺寸（缩放前），按配置的显示宽高设置缩放。
+                // 注意：用模型「内容」的实际包围盒（getLocalBounds）定位，而不是整张画布，
+                // 否则画布留白会让模型（尤其脚部）被窗口边缘裁切，导致显示不全。
+                const origW = model.width;
+                const origH = model.height;
+                function layout() {
+                    try {
+                        const lb = model.getLocalBounds();
+                        if (lb.width > 0 && lb.height > 0) {
+                            const sx = cfg.modelWidth / lb.width;
+                            const sy = cfg.modelHeight / lb.height;
+                            model.scale.set(sx, sy);
+                            // getLocalBounds() 只计入 localTransform 的缩放，漏掉了它的平移量
+                            // （来自 model3.json 的 CenterY，如 -0.1 会整体下移 0.1*高度），
+                            // 若不算上，脚部会比包围盒底部低出一截而被窗口底边裁切。
+                            const lt = model.internalModel.localTransform;
+                            const lx = lt.tx || 0, ly = lt.ty || 0;
+                            // 内容右下角对齐窗口右下角（四边留出边距），
+                            // 底部/右侧边距留大一些，容纳待机走路与物理摆动时的下探/外扩。
+                            const RIGHT_MARGIN = 28;
+                            const BOTTOM_MARGIN = 36; // 底部留空（缩小让桌宠整体更贴近屏幕底部）
+                            model.x = window.innerWidth - RIGHT_MARGIN - (lb.x + lb.width) * sx - lx * sx;
+                            model.y = window.innerHeight - BOTTOM_MARGIN - (lb.y + lb.height) * sy - ly * sy;
+                            placeChatUI();
+                            return;
+                        }
+                    } catch {}
+                    // 回退：按原始画布尺寸定位
+                    const sx = cfg.modelWidth / origW;
+                    const sy = cfg.modelHeight / origH;
+                    model.scale.set(sx, sy);
+                    model.x = window.innerWidth - model.width;
+                    model.y = window.innerHeight - model.height;
+                }
+                layout();
+                window.addEventListener("resize", layout);
+
+                // 屏幕信息缓存：工作区（不含 Dock/菜单栏）+ 窗口位置/大小，
+                // 用于把聊天输入框约束在屏幕内、避开 Dock。
+                let screenInfo = null;
+                async function refreshScreenInfo() {
+                    try {
+                        const r = await fetch("/api/screen");
+                        const d = await r.json();
+                        if (d && d.ok) screenInfo = d;
+                    } catch {}
+                }
+                refreshScreenInfo();
+
+                // 聊天输入框与输出气泡的水平居中定位：都对齐模型中心；
+                // 输出气泡（说话内容）放在头顶上方，聊天输入框放在脚部区域。
+                // 两者都会根据屏幕工作区（已扣除 Dock/菜单栏）自动夹紧位置：
+                // 桌宠在屏幕最右下角、或窗口被拖到边缘时，输入框/气泡自动左移、上移，
+                // 不超出屏幕、不被 Dock 挡住。
+                function placeChatUI() {
+                    try {
+                        const box = document.getElementById("chatBox");
+                        const bub = document.getElementById("bubble");
+                        const lb = model.getLocalBounds();
+                        const lt = model.internalModel.localTransform;
+                        // 模型中心（窗口内 x）与模型内容顶部（窗口内 y）
+                        const cx = model.x + (lb.x + (lt.tx || 0) + lb.width / 2) * model.scale.x;
+                        const top = model.y + (lb.y + (lt.ty || 0)) * model.scale.y;
+                        // 窗口位置/尺寸 + 屏幕工作区（不含 Dock/菜单栏）。
+                        // screenInfo 取不到时退回窗口坐标，不影响正常使用。
+                        const wx = (screenInfo && screenInfo.windowPos && screenInfo.windowPos.x) || 0;
+                        const wy = (screenInfo && screenInfo.windowPos && screenInfo.windowPos.y) || 0;
+                        const ww = (screenInfo && screenInfo.windowSize && screenInfo.windowSize[0]) || window.innerWidth;
+                        const wh = (screenInfo && screenInfo.windowSize && screenInfo.windowSize[1]) || window.innerHeight;
+                        const wa = (screenInfo && screenInfo.workArea) || { x: 0, y: 0, width: ww, height: wh };
+                        const M = 10; // 屏幕边缘留白
+                        // 水平：中心点夹在工作区左右内；垂直：底部夹在工作区上下内
+                        const clampX = (centerScreenX, w) => {
+                            const min = wa.x + M + w / 2;
+                            const max = wa.x + wa.width - M - w / 2;
+                            return Math.min(Math.max(centerScreenX, min), Math.max(min, max));
+                        };
+                        const clampY = (bottomScreenY, h) => {
+                            const min = wa.y + M + h;
+                            const max = wa.y + wa.height - M;
+                            return Math.min(Math.max(bottomScreenY, min), Math.max(min, max));
+                        };
+                        if (box) {
+                            const bw = box.offsetWidth || 300;
+                            const bh = box.offsetHeight || 45;
+                            // 输入框中心默认对齐模型中心，底部默认距窗口底部 24px（脚部区域）
+                            const centerX = clampX(wx + cx, bw);
+                            const bottomY = clampY(wy + wh - 24, bh);
+                            box.style.left = Math.round(centerX - wx) + "px";
+                            box.style.bottom = Math.round(wy + wh - bottomY) + "px";
+                        }
+                        if (bub) {
+                            const bw = bub.offsetWidth || 200;
+                            const bh = bub.offsetHeight || 60;
+                            // 气泡中心对齐模型中心，底部 = 头顶上方 10px
+                            const centerX = clampX(wx + cx, bw);
+                            const bottomY = clampY(wy + (top - 10), bh);
+                            bub.style.left = Math.round(centerX - wx) + "px";
+                            bub.style.bottom = Math.round(wy + wh - bottomY) + "px";
+                        }
+                    } catch {}
+                }
+
+                // 安全兜底：待机走路/物理摆动中内容一旦越出窗口边缘就整体平移回来，
+                // 确保全身（尤其脚部）永远完整显示。只平移不缩放，避免画面跳动。
+                app.ticker.add(() => {
+                    try {
+                        const lb = model.getLocalBounds();
+                        if (lb.width <= 0) return;
+                        const lt = model.internalModel.localTransform;
+                        const lx = lt.tx || 0, ly = lt.ty || 0;
+                        const left = model.x + (lb.x + lx) * model.scale.x;
+                        const right = model.x + (lb.x + lx + lb.width) * model.scale.x;
+                        const top = model.y + (lb.y + ly) * model.scale.y;
+                        const bottom = model.y + (lb.y + ly + lb.height) * model.scale.y;
+                        if (bottom > window.innerHeight - 2) model.y -= bottom - (window.innerHeight - 2);
+                        if (right > window.innerWidth - 2) model.x -= right - (window.innerWidth - 2);
+                        if (top < 2) model.y += 2 - top;
+                        if (left < 2) model.x += 2 - left;
+                    } catch {}
+                });
+
+                // 视线/头部跟随鼠标（focus 方法自带插值）。
+                // 桌面宠物窗口是鼠标穿透的，主进程会按窗口内坐标推送「全局光标位置」，
+                // 窗口内 pointermove 作为兜底。
+                // 额外逻辑：鼠标持续 5 秒未移动时，桌宠自动正视前方；鼠标再次移动即恢复跟随。
+                let lastCursor = null;   // 最近一次有效光标位置
+                let lastMoveTime = 0;    // 最近一次光标「移动」时间
+                let isIdle = false;      // 是否处于「正视」空闲态
+                let hoverState = false;  // 鼠标是否位于模型本体上（决定点击穿透开关）
+
+                // 判定鼠标是否在可交互区域（模型几何范围 或 可见的聊天输入框）内，
+                // 决定是否关闭点击穿透。核心用「模型内容包围盒 getBounds()」做几何命中：
+                // 纯计算、零 GPU 回读，稳定可靠，鼠标在模型上时窗口不穿透、可点击互动，
+                // 在模型外空白处保持穿透、不挡鼠标。
+                // （注意：本模型未带名为 HitArea 的部件，model.hitTest() 恒为空，
+                //   因此这里以 getBounds() 为主，而非依赖 HitArea。）
+                function isOnModel(x, y) {
+                    // 若模型确实含 HitArea 部件则优先用其做更贴合身体的命中（纯计算无开销）
+                    try {
+                        const internal = model.internalModel;
+                        if (internal && internal.hitAreas && Object.keys(internal.hitAreas).length > 0) {
+                            if (model.hitTest(x, y).length > 0) return true;
+                        }
+                    } catch {}
+                    // 主用/兜底：模型内容包围盒
+                    try {
+                        const b = model.getBounds();
+                        if (x >= b.x && x <= b.x + b.width && y >= b.y && y <= b.y + b.height) return true;
+                    } catch {}
+                    // 聊天输入框可见时也算可交互区域
+                    const cb = document.getElementById("chatBox");
+                    if (cb && cb.classList.contains("show")) {
+                        const r = cb.getBoundingClientRect();
+                        if (x >= r.left && x <= r.right && y >= r.top && y <= r.bottom) return true;
+                    }
+                    return false;
+                }
+
+                function focusAt(x, y) {
+                    // 主进程 30Hz 轮询会持续推送相同坐标，仅当坐标变化才算「移动」
+                    if (lastCursor && lastCursor[0] === x && lastCursor[1] === y) return;
+                    lastCursor = [x, y];
+                    lastMoveTime = Date.now();
+                    if (isIdle) isIdle = false;   // 鼠标动了，退出空闲态
+                    model.focus(x, y);
+                    // 命中检测：鼠标在模型本体上 → 允许点击互动；
+                    // 在模型外的空白处 → 保持鼠标穿透。结果反馈给主进程切换穿透状态。
+                    const hit = isOnModel(x, y);
+                    if (hit !== hoverState) {
+                        hoverState = hit;
+                        console.info("[点击] 模型命中 =", hit);
+                        if (window.pet && window.pet.setHover) window.pet.setHover(hit);
+                        // 鼠标刚移到模型身上：偶尔（冷却 45 秒）说一句新的简短 AI 情绪话
+                        if (hit) maybeSpeakMoodLine();
+                    }
+                }
+                if (window.pet && window.pet.onCursor) {
+                    window.pet.onCursor((x, y) => focusAt(x, y));
+                }
+                window.addEventListener("pointermove", (e) => {
+                    focusAt(e.clientX, e.clientY);
+                });
+
+                // 空闲检测：超过 5 秒未移动 → 正视（视线/头部平滑归零到模型中心）
+                setInterval(() => {
+                    if (!isIdle && Date.now() - lastMoveTime > 5000) {
+                        isIdle = true;
+                        model.focus(0, 0);
+                        console.info("[视线] 鼠标静止，回到正视");
+                    }
+                }, 500);
+
+                // ---------- 对话输出框 ----------
+                // Liquid Glass 输出框：有新回复时显示，打字机逐字打出，打完后约 3.5 秒自动淡出。
+                // 支持简单表情标记（[开心]→😊）与情绪标签（（小脸红）→自动切换模型表情，标签不显示在正文里）。
+                // 回答「只说一次」：鼠标移动/悬停都「不会把旧内容重新弹出来」。
+                const OUTPUT_HIDE_DELAY = 3500;
+                let outputTimer = null;
+                let typewriterTimer = null;
+                // 简单表情标记：方括号里的文字 → emoji
+                const EMOJI_MAP = {
+                    "[开心]": "😊", "[哭]": "😭", "[生气]": "😠", "[汗]": "😅", "[星星]": "✨",
+                    "[爱心]": "💙", "[棒]": "👍", "[惊]": "😮", "[无语]": "😑", "[笑]": "😄",
+                };
+                // 情绪名 → 模型表情（模型已注册的全部表情，model3.json 已补全注册）
+                const EMOTION_EXPR = {
+                    // 注：模型没有单独的「害羞」表情文件，「小脸红」即脸红害羞，故害羞/脸红统一映射到「小脸红」
+                    开心: "小脸红", 高兴: "小脸红", 害羞: "小脸红", 脸红: "小脸红", 羞涩: "小脸红",
+                    娇羞: "小脸红", 羞: "小脸红", 不好意思: "小脸红",
+                    哭: "哭", 难过: "哭", 伤心: "哭", 委屈: "哭", 担忧: "哭", 担心: "哭", 心疼: "哭",
+                    生气: "生气", 愤怒: "生气", 恼: "生气",
+                    汗: "汗", 尴尬: "汗", 无语: "汗", 冷汗: "汗", 无奈: "汗", 累: "汗",
+                    星星: "星星", 惊喜: "星星", 惊艳: "星星",
+                    猫猫嘴: "猫猫嘴", 傲娇: "猫猫嘴", 得意: "猫猫嘴",
+                    托脸: "托脸", 卖萌: "托脸", 撒娇: "托脸",
+                    大聪明: "大聪明", 聪明: "大聪明",
+                    捂嘴: "捂嘴", 偷笑: "捂嘴",
+                    帽子: "帽子", 拿蛋糕: "拿蛋糕", 吃: "拿蛋糕", 喝饮料: "喝饮料", 喝: "喝饮料",
+                    拿勺子: "拿勺子", 呆毛电风扇: "呆毛电风扇", 鱼鱼: "鱼鱼",
+                };
+                function emojiMark(text) {
+                    let t = String(text);
+                    for (const k in EMOJI_MAP) t = t.split(k).join(EMOJI_MAP[k]);
+                    return t;
+                }
+                // 提取开头情绪标签（（情绪名）或 (情绪名)），返回 { emotion, body }
+                function parseEmotionTag(text) {
+                    const t = String(text);
+                    const m = t.match(/^\s*[（(]([^）)]+)[）)]\s*/);
+                    if (!m) return { emotion: null, body: t };
+                    const expr = EMOTION_EXPR[m[1].trim()] || null;
+                    // 只保留第一段正式内容：若正文后面还跟着第二个（情绪名）标签则截断
+                    let body = t.slice(m[0].length).trim();
+                    const nxt = body.match(/\n[（(][^）)]+[）)]/);
+                    if (nxt) body = body.slice(0, nxt.index).trim();
+                    return { emotion: expr, body };
+                }
+                // 播放一个表情，约 4 秒后自动恢复默认表情
+                let expressionTimer = null;
+                function playExpression(name) {
+                    try {
+                        model.expression(name).then(() => {
+                            if (expressionTimer) clearTimeout(expressionTimer);
+                            expressionTimer = setTimeout(() => {
+                                try { model.internalModel.motionManager.expressionManager.resetExpression(); } catch {}
+                            }, 4000);
+                        });
+                    } catch {}
+                }
+                function showBubble(text) {
+                    const el = document.getElementById("bubble");
+                    if (!el) return;
+                    const { emotion, body } = parseEmotionTag(text);
+                    if (emotion) playExpression(emotion);
+                    const display = emojiMark(body);
+                    if (typewriterTimer) clearInterval(typewriterTimer);
+                    el.classList.add("show");
+                    el.textContent = "";
+                    placeChatUI(); // 内容变化后按屏幕工作区重新夹紧气泡位置
+                    // 打字机逐字显示；文字较长时加快（每步 2 字 / 8ms），短句则 1 字 / 26ms
+                    const chars = [...display];
+                    let i = 0;
+                    const step = display.length > 50 ? 2 : 1;
+                    const delay = display.length > 50 ? 8 : 26;
+                    typewriterTimer = setInterval(() => {
+                        i = Math.min(i + step, chars.length);
+                        el.textContent = chars.slice(0, i).join("");
+                        if (i >= chars.length) {
+                            clearInterval(typewriterTimer);
+                            typewriterTimer = null;
+                            if (outputTimer) clearTimeout(outputTimer);
+                            outputTimer = setTimeout(() => el.classList.remove("show"), OUTPUT_HIDE_DELAY);
+                        }
+                    }, delay);
+                }
+
+                // ---------- 悬停情绪话 ----------
+                // 鼠标第一次移到模型身上时，偶尔（冷却 45 秒）通过 /api/mood 生成一句
+                // 新的、简短的 AI 情绪台词（例如「嗯？主人来啦~」），每次内容都不同，
+                // 绝不重复上一次的聊天回答。显示后照常自动淡出。
+                const MOOD_COOLDOWN = 45 * 1000;
+                let lastMoodTime = 0;
+                async function maybeSpeakMoodLine() {
+                    // 聊天框正在输入 / 已有气泡在显示时不打断，等它说完
+                    if (chatBoxEl && chatBoxEl.classList.contains("show")) return;
+                    const el = document.getElementById("bubble");
+                    if (el && el.classList.contains("show")) return;
+                    const now = Date.now();
+                    if (now - lastMoodTime < MOOD_COOLDOWN) return;
+                    lastMoodTime = now;
+                    try {
+                        const r = await fetch("/api/mood", {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({}),
+                        });
+                        const data = await r.json();
+                        if (data && data.ok && String(data.reply).trim()) showBubble(data.reply);
+                    } catch {}
+                }
+
+                // ---------- 点击部位差异化反馈 ----------
+                // 判定策略：站立角色按「画布纵向比例」切分为 头/胸/腰/私处/腿/脚 六个纵向带，
+                // 再叠加「手部」特判（点中手/衣袖 → 摊手）。不用单个部件的包围盒，
+                // 避免「点身体却命中头部」的误判。分界由各类部位的实际纵向范围计算。
+                let partNameById = {};         // 部件 Id → 部件名
+                let canvasH = 1;               // 模型画布像素高度
+                let handDrawables = [];        // 手/衣袖 部件的 ArtMesh 索引
+                // 各部位纵向分界（模型画布像素坐标，y 向下）。由 loadRegions 按实际部件范围计算。
+                let band = { headBottom: 0, chestBottom: 0, waistBottom: 0, legTop: 0, footTop: 0 };
+                const HAND_KW = /手|摊/; // 仅真实手部（黑手/白手/摊手），排除宽大「衣袖」以免侵占胸/腰判定
+                const HEAD_KW = /头|脸|发|刘海|礼帽|呆毛|眼|眉|鼻|嘴|耳|圈眼|五官|表情组|wink|睫毛|眼球|眼眶|眼皮|脸红|泪|汗|亮晶晶|鱼鱼|鼓嘴|生气/;
+                const CHEST_KW = /衣服|内衬|上半身/;
+                const LEG_KW = /腿|裤/;
+                const FOOT_KW = /鞋/;
+                const tmpBounds = {};
+                async function loadRegions() {
+                    try {
+                        const r = await fetch("./model/芙宁娜.cdi3.json");
+                        const cdi = await r.json();
+                        if (Array.isArray(cdi.Parts)) {
+                            for (const pt of cdi.Parts) if (pt && pt.Id) partNameById[pt.Id] = pt.Name || "";
+                        }
+                    } catch (e) {
+                        console.warn("[部位] cdi3 读取失败，按固定比例兜底", e && e.message);
+                    }
+                    try {
+                        const internal = model.internalModel;
+                        canvasH = internal.originalHeight || 1;
+                        const cm = internal.coreModel;
+                        // 固定纵向分界（占画布高度比例）：头/胸/腰/私处/腿/脚。
+                        // 比例可在设置面板「部位点击判定」中自由调整，并保存到 config.json，
+                        // 下次打开自动沿用。此处从 cfg.band 读取（默认 头25/胸34/腰45/私处55/脚60）。
+                        const bcfg = (cfg && cfg.band) || {};
+                        band.headBottom = canvasH * ((bcfg.headBottom ?? 25) / 100);  // 头：0-headBottom%
+                        band.chestBottom = canvasH * ((bcfg.chestBottom ?? 34) / 100); // 胸：headBottom-chestBottom%
+                        band.waistBottom = canvasH * ((bcfg.waistBottom ?? 45) / 100); // 腰：chestBottom-waistBottom%
+                        band.legTop = canvasH * ((bcfg.legTop ?? 55) / 100);       // 私处：waistBottom-legTop%
+                        band.footTop = canvasH * ((bcfg.footTop ?? 60) / 100);     // 腿：legTop-footTop%、脚：footTop%+
+                        // 收集各类部件的实际纵向范围 [minY, maxY]，仅用于校准分界
+                        const FACE_KW = /头|脸|五官|眼|眉|鼻|嘴|耳|圈眼|wink|睫毛|眼球|眼眶|眼皮|脸红|泪|汗|亮晶晶|表情组|鼓嘴|生气/;
+                        const HAIR_KW = /发|刘海|呆毛|礼帽|帽子/;
+                        const ext = { 脸: [canvasH, -1], 头发: [canvasH, -1], 胸衣: [canvasH, -1], 腿: [canvasH, -1], 脚: [canvasH, -1] };
+                        for (let d = 0; d < cm.getDrawableCount(); d++) {
+                            if (HIDE_DRAWABLES.includes(d)) continue; // 胸牌不算部位
+                            const pIdx = cm.getDrawableParentPartIndex(d);
+                            if (pIdx < 0) continue;
+                            const name = partNameById[cm.getPartId(pIdx).getString()] || "";
+                            const b = internal.getDrawableBounds(d, tmpBounds);
+                            if (HAND_KW.test(name)) { handDrawables.push(d); continue; }
+                            let cat = null;
+                            if (FOOT_KW.test(name)) cat = "脚";
+                            else if (LEG_KW.test(name)) cat = "腿";
+                            else if (FACE_KW.test(name)) cat = "脸";
+                            else if (HAIR_KW.test(name)) cat = "头发";
+                            else if (CHEST_KW.test(name)) cat = "胸衣";
+                            if (cat) {
+                                ext[cat][0] = Math.min(ext[cat][0], b.y);
+                                ext[cat][1] = Math.max(ext[cat][1], b.y + b.height);
+                            }
+                        }
+                        for (const k in ext) if (ext[k][0] === canvasH) ext[k] = [-1, -1];
+                        console.info(`[部位] 画布高=${Math.round(canvasH)} 分界=` + JSON.stringify({
+                            头: Math.round(band.headBottom), 胸: Math.round(band.chestBottom),
+                            腰: Math.round(band.waistBottom), 私处: Math.round(band.legTop),
+                            腿顶: Math.round(band.legTop), 脚: Math.round(band.footTop),
+                        }) + " 实际范围=" + JSON.stringify({
+                            脸: ext.脸.map((v) => Math.round(v)), 头发: ext.头发.map((v) => Math.round(v)),
+                            胸衣: ext.胸衣.map((v) => Math.round(v)), 腿: ext.腿.map((v) => Math.round(v)),
+                            脚: ext.脚.map((v) => Math.round(v)),
+                        }) + ` 手部=${handDrawables.length}`);
+                    } catch (e) {
+                        console.warn("[部位] 构建失败", e && e.message);
+                    }
+                }
+                loadRegions();
+                // 命中检测：手部特判优先，否则按纵向带返回 头/胸/腰/私处/腿/脚
+                function hitRegionAt(mx, my) {
+                    try {
+                        const internal = model.internalModel;
+                        for (const d of handDrawables) {
+                            const b = internal.getDrawableBounds(d, tmpBounds);
+                            if (mx >= b.x && mx <= b.x + b.width && my >= b.y && my <= b.y + b.height) return "hand";
+                        }
+                    } catch {}
+                    if (my < band.headBottom) return "head";
+                    if (my < band.chestBottom) return "chest";
+                    if (my < band.waistBottom) return "waist";
+                    if (my < band.legTop) return "private";
+                    if (my < band.footTop) return "leg";
+                    return "foot";
+                }
+                // 各部位的反馈文案（含情绪标签：显示气泡的同时自动切换表情）
+                const HEAD_PAT_LINES = [
+                    "（小脸红）\n被主人摸头了，本芙宁娜好开心呀~",
+                    "（星星）\n嘿嘿，主人的手手暖暖的，本芙宁娜很受用哦~",
+                ];
+                const CHEST_LINES = [
+                    "（害羞）\n诶？盯着人家胸口看，主人好害羞呀~",
+                    "（害羞）\n这么看着本芙宁娜，人家会不好意思的啦~",
+                ];
+                const WAIST_LINES = [
+                    "（猫猫嘴）\n主人碰人家腰，痒痒的啦~",
+                    "（害羞）\n别挠人家腰啦，本芙宁娜会害羞的~",
+                ];
+                const PRIV_LINES = [
+                    "（害羞）\n呀！那里不能碰啦，主人坏坏的~",
+                    "（害羞）\n哼，本芙宁娜才不会让你得逞呢~",
+                ];
+                const LEG_LINES = [
+                    "（害羞）\n主人一直盯着人家的腿，本芙宁娜都害羞了~",
+                    "（汗）\n腿腿有什么好看的啦，快别看啦~",
+                ];
+                const FOOT_LINES = [
+                    "（星星）\n连脚脚都要碰，主人的手也太不安分啦~",
+                    "（猫猫嘴）\n本芙宁娜的脚脚可不随便给摸哦~",
+                ];
+                const HAND_LINES = [
+                    "（星星）\n看本芙宁娜华丽的一摊手，帅不帅~",
+                    "（猫猫嘴）\n主人的手手伸过来，是想跟本芙宁娜玩吗？",
+                ];
+                function pickLine(lines) {
+                    return lines[Math.floor(Math.random() * lines.length)];
+                }
+                // 触碰部位反馈：动作照旧（摸头动画 / 摊手动作），台词交给 AI 实时生成——
+                // 每次点击都会得到一句全新、贴合部位、不超过 20 字的芙宁娜撒娇/傲娇短句；
+                // AI 接口不可用时（断网/超时）回退到固定文案兜底，保证点击始终有反馈。
+                const FALLBACK_LINES = {
+                    head: HEAD_PAT_LINES, hand: HAND_LINES, chest: CHEST_LINES,
+                    waist: WAIST_LINES, private: PRIV_LINES, leg: LEG_LINES, foot: FOOT_LINES,
+                };
+                async function aiTouchLine(region) {
+                    try {
+                        const r = await fetch("/api/touch", {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({ region }),
+                        });
+                        const d = await r.json();
+                        if (d && d.ok && String(d.reply).trim()) return String(d.reply).slice(0, 160);
+                    } catch {}
+                    return null;
+                }
+                function playRegionReaction(region) {
+                    // 动作：头 → 摸头动画；手 → 摊手动作；其余部位无专属动作
+                    if (region === "head") startHeadPat();
+                    else if (region === "hand") model.motion("Special").catch(() => {});
+                    // 未知/兜底部位：随机安全表情即可
+                    if (!FALLBACK_LINES[region]) { playRandomExpression(EXPRESSIONS); return; }
+                    const fallback = pickLine(FALLBACK_LINES[region]);
+                    aiTouchLine(region).then((ai) => showBubble(ai || fallback));
+                }
+
+                // ---------- 点击 / 拖拽互动 ----------
+                const EXPRESSIONS = ["小脸红", "猫猫嘴", "托脸", "大聪明", "星星", "捂嘴", "汗", "哭", "呆毛电风扇", "喝饮料", "拿蛋糕", "拿勺子", "鱼鱼", "帽子", "生气"];
+                const chatBoxEl = document.getElementById("chatBox");
+                const chatInputEl = document.getElementById("chatInput");
+                function openChat() {
+                    chatBoxEl.classList.add("show");
+                    // 先显示才能量到输入框实际宽高，再按屏幕工作区重新定位（避开 Dock/屏幕边缘）
+                    refreshScreenInfo().then(() => placeChatUI());
+                    chatInputEl.focus();
+                }
+                function closeChat() {
+                    chatBoxEl.classList.remove("show");
+                    chatInputEl.blur();
+                }
+                // 随机播放一个安全表情，3.5 秒后恢复默认表情
+                function playRandomExpression(list) {
+                    const exp = list[Math.floor(Math.random() * list.length)];
+                    model.expression(exp).then(() => {
+                        setTimeout(() => {
+                            try { model.internalModel.motionManager.expressionManager.resetExpression(); } catch {}
+                        }, 3500);
+                    });
+                }
+                // 拖拽状态：在模型上按下只记录起点（先不进入拖拽）；
+                // 移动超过 6px 才判定为「拖拽」并通知主进程开始跟随光标移动窗口。
+                // 因此单击（不移动）只会弹聊天框、不会移动桌宠；
+                // 三指拖拽（macOS 系统三指拖移 = 左键按下拖动）或按住拖动才能移动桌宠。
+                const drag = { active: false, startX: 0, startY: 0, moved: false };
+                // 按下判定用「窗口级 DOM 事件」而非 PIXI 事件系统：
+                // PIXI 事件依赖 eventMode 配置，未配置时 model.on("pointerdown") 收不到事件，
+                // 会导致 drag.active 恒为 false、单击弹不出聊天框。窗口事件则稳定可靠。
+                // 窗口在模型上时非穿透、能收到事件；在模型外时穿透、收不到，天然区分。
+                window.addEventListener("pointerdown", (e) => {
+                    // 点在聊天输入框（可见时）上不算「点模型」，避免干扰输入
+                    if (chatBoxEl.classList.contains("show") && chatBoxEl.contains(e.target)) return;
+                    lastInteractionTime = Date.now(); // 用户正在互动，刷新闲置计时
+                    try { model.focus(e.clientX, e.clientY); } catch {}
+                    drag.active = true;
+                    drag.startX = e.clientX;
+                    drag.startY = e.clientY;
+                    drag.moved = false;
+                });
+                window.addEventListener("pointermove", (e) => {
+                    if (drag.active && !drag.moved) {
+                        const dx = e.clientX - drag.startX, dy = e.clientY - drag.startY;
+                        if (dx * dx + dy * dy > 36) {
+                            drag.moved = true; // 超过 6px：正式进入拖拽
+                            if (window.pet && window.pet.startDrag) window.pet.startDrag();
+                        }
+                    }
+                });
+                // 单击/双击判定：350ms 内第二次点击视为双击。
+                //  - 单击：仅做部位差异化反馈（气泡/表情/动作），不弹聊天框
+                //  - 双击：全身任意位置双击 开/关 聊天框
+                let lastClickTime = 0;
+                window.addEventListener("pointerup", (e) => {
+                    if (!drag.active) return;
+                    drag.active = false;
+                    if (drag.moved) {
+                        // 拖拽结束：主进程已把桌宠最终位置写入 config.json
+                        if (window.pet && window.pet.endDrag) window.pet.endDrag();
+                        // 拖拽可能把桌宠拖到 Dock/屏幕边缘附近，刷新屏幕信息并重新夹紧输入框位置
+                        if (chatBoxEl.classList.contains("show")) refreshScreenInfo().then(() => placeChatUI());
+                        return;
+                    }
+                    // 单击：仅当点落在模型几何范围内才做部位互动，
+                    // 模型外的空白处保持穿透、不误触。
+                    if (!isOnModel(e.clientX, e.clientY)) return;
+                    const now = Date.now();
+                    if (now - lastClickTime < 350) {
+                        // 双击：全身任意位置 开/关 聊天框
+                        lastClickTime = 0;
+                        if (chatBoxEl.classList.contains("show")) closeChat();
+                        else openChat();
+                        return;
+                    }
+                    lastClickTime = now;
+                    // 计算点击落在哪个部位（窗口坐标 → 模型画布空间）
+                    let region = "body";
+                    let clickY = -1;
+                    try {
+                        const mp = model.toModelPosition(new PIXI.Point(e.clientX, e.clientY));
+                        clickY = mp.y;
+                        region = hitRegionAt(mp.x, mp.y) || "body";
+                    } catch {}
+                    console.info(`[点击] 部位 = ${region} y=${Math.round(clickY)} (${((clickY / (canvasH || 1)) * 100).toFixed(0)}%)`);
+                    playRegionReaction(region);
+                });
+
+                // 右键模型本体：弹出「设置 / 退出」菜单。
+                // 窗口在模型外空白处保持穿透，右键事件到不了页面，天然只在模型上触发。
+                window.addEventListener("contextmenu", (e) => {
+                    if (chatBoxEl.classList.contains("show") && chatBoxEl.contains(e.target)) return;
+                    if (!isOnModel(e.clientX, e.clientY)) return;
+                    e.preventDefault();
+                    if (window.pet && window.pet.openMenu) window.pet.openMenu();
+                });
+
+                // ---------- 系统状态与主动搭话 ----------
+                // 定期读取系统状态（活跃应用 / CPU / 电量）：
+                //  - 低电量（≤20% 且未充电）→ 担忧表情（模型无「担忧」，用「哭」代替）+ 提醒气泡
+                //  - CPU 过高（≥92%）→ 汗表情 + 提醒气泡
+                //  - 长时间闲置 → 按当前活跃应用类别主动弹气泡搭话，而非永远被动等输入
+                const IDLE_PROACTIVE_MS = 8 * 60 * 1000;     // 闲置多久主动搭话
+                const PROACTIVE_COOLDOWN = 15 * 60 * 1000;   // 主动搭话最小间隔
+                const SYSTEM_NOTE_COOLDOWN = 10 * 60 * 1000; // 低电量/CPU 提醒最小间隔
+                let sysInfo = { category: "other", cpuPercent: 0, batteryPercent: -1, charging: false, lowBattery: false, activeApp: "", activeWindow: "", activeFile: "" };
+                let lastInteractionTime = Date.now(); // 最近一次用户互动时间
+                let lastProactiveTime = 0;            // 最近一次主动搭话时间
+                let lastSystemNoteTime = 0;           // 最近一次系统提醒时间
+                const IDLE_LINES = {
+                    coding: [
+                        "（星星）\n主人还在敲代码呀，要不要本芙宁娜帮你看看哪里报错了？",
+                        "（托脸）\n代码敲久了记得歇一歇，本芙宁娜可不想看着主人累坏呢~",
+                    ],
+                    browsing: [
+                        "（猫猫嘴）\n又在刷网页啦？看到什么有趣的快跟本芙宁娜说说~",
+                        "（小脸红）\n主人看屏幕好认真，都快把本芙宁娜晾在一边啦~",
+                    ],
+                    gaming: [
+                        "（星星）\n主人打游戏好投入，本芙宁娜在旁边给你加油鼓劲~",
+                        "（生气）\n哼，游戏有那么好玩吗？本芙宁娜也要玩！",
+                    ],
+                    watching: [
+                        "（托脸）\n主人又在看视频啦，本芙宁娜也想一起看~",
+                        "（猫猫嘴）\n看什么呢这么入迷，本芙宁娜好奇死啦~",
+                    ],
+                    other: [
+                        "（小脸红）\n主人忙完啦？快来陪陪本芙宁娜嘛~",
+                        "（星星）\n主人不在的时候，本芙宁娜可乖了呢，一直等着你~",
+                    ],
+                };
+                const LOW_BATTERY_LINE = "（哭）\n呜…主人的电脑快没电啦，本芙宁娜好担心，快去找充电器吧~";
+                const HIGH_CPU_LINE = "（汗）\n主人的电脑好烫好烫，让它歇一歇嘛，本芙宁娜看着都心疼~";
+                async function refreshSystemInfo() {
+                    try {
+                        const r = await fetch("/api/system");
+                        const d = await r.json();
+                        if (d && d.ok) sysInfo = Object.assign(sysInfo, d);
+                    } catch {}
+                }
+                async function maybeProactive() {
+                    await refreshSystemInfo();
+                    const now = Date.now();
+                    // 正在输入/聊天、或已有气泡显示时不打扰
+                    if (chatBoxEl.classList.contains("show")) return;
+                    const el = document.getElementById("bubble");
+                    if (el && el.classList.contains("show")) return;
+                    // 1) 低电量优先提醒（担忧表情）
+                    if (sysInfo.lowBattery && now - lastSystemNoteTime > SYSTEM_NOTE_COOLDOWN) {
+                        lastSystemNoteTime = now;
+                        lastProactiveTime = now;
+                        showBubble(LOW_BATTERY_LINE);
+                        return;
+                    }
+                    // 2) CPU 过高偶尔提醒
+                    if (sysInfo.cpuPercent >= 92 && now - lastSystemNoteTime > SYSTEM_NOTE_COOLDOWN) {
+                        lastSystemNoteTime = now;
+                        lastProactiveTime = now;
+                        showBubble(HIGH_CPU_LINE);
+                        return;
+                    }
+                    // 3) 长时间闲置 → 按当前活跃应用类别主动搭话
+                    if (now - lastInteractionTime > IDLE_PROACTIVE_MS && now - lastProactiveTime > PROACTIVE_COOLDOWN) {
+                        lastProactiveTime = now;
+                        const cat = sysInfo.category;
+                        let lines = IDLE_LINES[cat] || IDLE_LINES.other;
+                        // 写代码是最主要的场景：结合当前正在编辑的文件给出针对性搭话
+                        if (cat === "coding" && sysInfo.activeFile) {
+                            const f = sysInfo.activeFile;
+                            lines = [
+                                `（星星）\n主人正在写「${f}」呀，遇到卡壳的地方可以问问本芙宁娜哦~`,
+                                `（托脸）\n「${f}」敲久了容易眼花，喝口水歇一歇，本芙宁娜陪着你~`,
+                                `（猫猫嘴）\n这份「${f}」的进展，本芙宁娜可都看在眼里呢，很棒哦~`,
+                            ];
+                        }
+                        console.info(`[主动搭话] 类别=${cat} 应用=${sysInfo.activeApp} 窗口=${sysInfo.activeWindow || ""} 文件=${sysInfo.activeFile || ""} 闲置=${Math.round((now - lastInteractionTime) / 1000)}秒`);
+                        showBubble(pickLine(lines));
+                    }
+                }
+                // 启动时先取一次系统信息，之后每 30 秒刷新并判断是否主动搭话
+                refreshSystemInfo();
+                setInterval(() => maybeProactive(), 30000);
+
+                // ---------- 待机随机小动作 ----------
+                // 每 25~40 秒随机做一个小动作，让待机更丰富：
+                //  - 60%：随机安全表情（小脸红/猫猫嘴/托脸/星星等，纯表情变化，3 秒后恢复）
+                //  - 40%：随机播放特殊动作动画「摊手」（来自 model3.json 的 Special 组，
+                //          已改为播放一次约 4.3 秒，播完动画管理器会自动回到待机动画，不会一直循环）
+                const IDLE_ACTIONS = ["小脸红", "猫猫嘴", "托脸", "星星", "大聪明", "捂嘴"];
+                const SPECIAL_MOTIONS_GROUP = "Special";
+                let idleActionTimer = null;
+                function scheduleIdleAction() {
+                    idleActionTimer = setTimeout(() => {
+                        try {
+                            if (Math.random() < 0.4) {
+                                // 随机播放「摊手」特殊动作（播完动画管理器自动回到待机，不会一直循环）
+                                model.motion(SPECIAL_MOTIONS_GROUP).catch(() => {});
+                            } else {
+                                playRandomExpression(IDLE_ACTIONS);
+                            }
+                        } catch {}
+                        scheduleIdleAction();
+                    }, 25000 + Math.random() * 15000);
+                }
+                scheduleIdleAction();
+
+                // ---------- 聊天：在输入框输入文字回车发送，回复显示在气泡里 ----------
+                chatInputEl.addEventListener("keydown", async (e) => {
+                    if (e.key === "Escape") { closeChat(); return; }
+                    if (e.key !== "Enter") return;
+                    lastInteractionTime = Date.now(); // 正在聊天，刷新闲置计时
+                    const msg = chatInputEl.value.trim();
+                    if (!msg) return;
+                    chatInputEl.value = "";
+                    showBubble("嗯嗯，芙宁娜在听~");
+                    try {
+                        const r = await fetch("/api/chat", {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({ message: msg }),
+                        });
+                        const data = await r.json();
+                        if (data && data.ok) showBubble(data.reply);
+                        else showBubble("呜…芙宁娜这边出了点小状况，稍后再试试吧~");
+                    } catch (err) {
+                        showBubble("呜…联系不上芙宁娜了，稍后再试试吧~");
+                    }
+                });
+
+                // 光标移出桌宠窗口时，自动收起聊天输入框（不再遮挡桌面）
+                if (window.pet && window.pet.onChatBlur) {
+                    window.pet.onChatBlur(() => closeChat());
+                }
+
+                // ---------- 接收主进程推送的 AI 对话并显示气泡 ----------
+                if (window.pet && window.pet.onSpeech) {
+                    window.pet.onSpeech((text) => showBubble(text));
+                }
+
+                // 播放待机动画（model3.json 已配置 Idle 组，10 秒循环，带呼吸/走路效果）
+                await model.motion("Idle");
+            } catch (err) {
+                console.error(err);
+            }
+        })();
+    </script>
+</body>
+</html>

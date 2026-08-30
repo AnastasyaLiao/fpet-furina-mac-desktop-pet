@@ -1,0 +1,13 @@
+{
+  "name": "furidab-pet",
+  "version": "0.1.0",
+  "private": true,
+  "description": "芙宁娜桌面宠物 —— 透明、无边框、置顶在屏幕右下角",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron ."
+  },
+  "devDependencies": {
+    "electron": "^44.0.0"
+  }
+}

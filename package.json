@@ -1,0 +1,55 @@
+{
+  "name": "fpet",
+  "version": "1.1.0",
+  "description": "fpet —— 芙宁娜桌面宠物（透明、无边框、常驻屏幕右下角），支持接入自己的 DeepSeek / Ollama 大模型",
+  "main": "electron/main.js",
+  "author": "fpet",
+  "license": "MIT",
+  "scripts": {
+    "dist": "electron-builder --mac dmg"
+  },
+  "devDependencies": {
+    "electron-builder": "^26.0.12"
+  },
+  "build": {
+    "appId": "com.fpet.app",
+    "productName": "fpet",
+    "electronVersion": "44.0.0",
+    "asar": false,
+    "directories": {
+      "output": "dist",
+      "buildResources": "build"
+    },
+    "files": [
+      "electron/**",
+      "!electron/node_modules/**",
+      "!electron/package-lock.json",
+      "index.html",
+      "settings.html",
+      "lib/**",
+      "model/**",
+      "config.json",
+      "chat_history.json"
+    ],
+    "artifactName": "fpet-${version}-${arch}.${ext}",
+    "mac": {
+      "target": [
+        {
+          "target": "dmg",
+          "arch": ["arm64"]
+        }
+      ],
+      "category": "public.app-category.entertainment",
+      "icon": "build/icon.icns",
+      "identity": null
+    },
+    "dmg": {
+      "title": "fpet ${version}",
+      "iconSize": 100,
+      "contents": [
+        { "x": 130, "y": 180 },
+        { "x": 410, "y": 180, "type": "link", "path": "/Applications" }
+      ]
+    }
+  }
+}

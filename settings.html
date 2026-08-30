@@ -1,0 +1,601 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>桌面宠物 · 设置</title>
+    <style>
+        :root {
+            --ink: #3a352f;
+            --muted: #8a8378;
+            --line: #e6e0d5;
+            --accent: #4f8f8f;
+            --accent-dark: #3a6f6f;
+            --card: #fffdf8;
+        }
+        * { box-sizing: border-box; }
+        html, body {
+            margin: 0;
+            padding: 0;
+            min-height: 100%;
+            font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+            color: var(--ink);
+        }
+        /* 柔和暖色渐变背景 + 细微噪点纹理（避免纯色平铺） */
+        body {
+            background:
+                radial-gradient(1200px 600px at 85% -10%, #f2e8d8 0%, transparent 60%),
+                radial-gradient(900px 500px at -10% 110%, #ddeaea 0%, transparent 55%),
+                linear-gradient(160deg, #f7f2e8 0%, #eef0ea 55%, #e7ecea 100%);
+        }
+        body::before {
+            content: "";
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            opacity: 0.35;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120' viewBox='0 0 120 120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3CfeComponentTransfer%3E%3CfeFuncA type='linear' slope='0.05'/%3E%3C/feComponentTransfer%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23n)'/%3E%3C/svg%3E");
+        }
+        main {
+            position: relative;
+            max-width: 920px;
+            margin: 0 auto;
+            padding: 56px 28px;
+            display: grid;
+            grid-template-columns: 1.1fr 0.9fr;
+            gap: 48px;
+            align-items: start;
+        }
+        .intro h1 {
+            font-size: 26px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            margin: 0 0 14px;
+        }
+        .intro .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            font-size: 12px;
+            color: var(--accent-dark);
+            background: rgba(79, 143, 143, 0.12);
+            border: 1px solid rgba(79, 143, 143, 0.25);
+            padding: 4px 10px;
+            border-radius: 999px;
+            margin-bottom: 18px;
+        }
+        .intro p {
+            font-size: 14px;
+            line-height: 1.8;
+            color: var(--muted);
+            margin: 0 0 12px;
+        }
+        .intro ul {
+            margin: 8px 0 0;
+            padding-left: 18px;
+            color: var(--muted);
+            font-size: 13px;
+            line-height: 2;
+        }
+        .panel {
+            background: var(--card);
+            border: 1px solid var(--line);
+            border-radius: 16px;
+            padding: 26px 26px 22px;
+            box-shadow: 0 12px 32px -18px rgba(60, 54, 45, 0.35);
+        }
+        .field { margin-bottom: 18px; }
+        .field label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 7px;
+        }
+        .field .hint {
+            font-size: 11px;
+            color: var(--muted);
+            margin-top: 5px;
+        }
+        .field input, .field select {
+            width: 100%;
+            padding: 10px 12px;
+            font-size: 15px;
+            border: 1px solid var(--line);
+            border-radius: 10px;
+            background: #fbfaf6;
+            color: var(--ink);
+            outline: none;
+            transition: border-color 0.16s ease;
+        }
+        .field input:focus, .field select:focus {
+            border-color: var(--accent);
+            background: #fff;
+        }
+        button.save {
+            width: 100%;
+            padding: 12px 0;
+            font-size: 15px;
+            font-weight: 600;
+            color: #fff;
+            background: linear-gradient(135deg, var(--accent) 0%, var(--accent-dark) 100%);
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            box-shadow: 0 10px 22px -12px rgba(58, 111, 111, 0.7);
+            transition: transform 0.16s ease, box-shadow 0.16s ease;
+        }
+        button.save:hover { transform: translateY(-1px); box-shadow: 0 14px 26px -12px rgba(58, 111, 111, 0.8); }
+        button.save:active { transform: translateY(0); }
+        button.save:disabled { opacity: 0.6; cursor: default; }
+        #testLLM, #saveLLM { flex: 1; }
+        .row { display: flex; gap: 10px; margin-top: 10px; }
+        button.save.secondary {
+            margin-top: 10px;
+            background: transparent;
+            color: var(--accent-dark);
+            border: 1px solid rgba(79, 143, 143, 0.4);
+            box-shadow: none;
+        }
+        button.save.secondary:hover {
+            background: rgba(79, 143, 143, 0.08);
+            box-shadow: none;
+            transform: none;
+        }
+        #status {
+            margin: 14px 0 0;
+            font-size: 13px;
+            min-height: 18px;
+        }
+        #status.ok { color: var(--accent-dark); }
+        #status.err { color: #b05252; }
+        /* ---------- 部位点击判定 分区 ---------- */
+        .divider {
+            margin: 26px 0 10px;
+            padding-top: 20px;
+            border-top: 1px dashed var(--line);
+            font-size: 14px;
+            font-weight: 700;
+            letter-spacing: 1px;
+        }
+        .hint.band {
+            background: rgba(79, 143, 143, 0.08);
+            border: 1px solid rgba(79, 143, 143, 0.2);
+            border-radius: 10px;
+            padding: 9px 12px;
+            line-height: 1.6;
+            margin: 0 0 18px;
+        }
+        /* ---------- 聊天区（DeepSeek 对话） ---------- */
+        .chat {
+            margin-top: 22px;
+            padding-top: 18px;
+            border-top: 1px solid var(--line);
+        }
+        .chat h2 {
+            font-size: 14px;
+            margin: 0 0 4px;
+        }
+        .chat .row { display: flex; gap: 8px; margin-top: 10px; }
+        .chat input[type="text"] {
+            flex: 1;
+            padding: 10px 12px;
+            font-size: 14px;
+            border: 1px solid var(--line);
+            border-radius: 10px;
+            background: #fbfaf6;
+            color: var(--ink);
+            outline: none;
+            transition: border-color 0.16s ease;
+        }
+        .chat input[type="text"]:focus { border-color: var(--accent); background: #fff; }
+        .chat button.send {
+            padding: 10px 18px;
+            font-size: 14px;
+            font-weight: 600;
+            color: #fff;
+            background: linear-gradient(135deg, var(--accent) 0%, var(--accent-dark) 100%);
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: transform 0.16s ease;
+        }
+        .chat button.send:disabled { opacity: 0.6; cursor: default; }
+        .chat button.send:hover { transform: translateY(-1px); }
+        #chatlog {
+            margin-top: 12px;
+            max-height: 220px;
+            overflow-y: auto;
+            font-size: 13px;
+            line-height: 1.5;
+        }
+        #chatlog .msg {
+            padding: 8px 12px;
+            border-radius: 10px;
+            margin-bottom: 8px;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+        #chatlog .msg.user { background: rgba(79, 143, 143, 0.14); text-align: right; color: var(--accent-dark); }
+        #chatlog .msg.ai { background: #f3efe6; color: var(--ink); }
+        @media (max-width: 720px) {
+            main { grid-template-columns: 1fr; padding: 32px 20px; gap: 28px; }
+        }
+    </style>
+</head>
+<body>
+    <main>
+        <section class="intro">
+            <h1>桌面宠物 · 设置</h1>
+            <span class="badge">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"/>
+                    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+                </svg>
+                芙宁娜
+            </span>
+            <p>在这里调整桌宠的整体大小。拖动滑块即可整体等比例缩放，宽高始终同步变化，不会变形。</p>
+            <ul>
+                <li>100% 为默认大小，最小 30%、最大 150%</li>
+                <li>窗口会随模型大小自动调整，模型位置保持不变</li>
+                <li>保存后桌宠自动重新加载，立即生效</li>
+                <li>缩放的是整体：模型、气泡、输入框全部等比变化</li>
+                <li>「输出清晰度」可提升模型内部渲染分辨率，画面更锐利</li>
+            </ul>
+        </section>
+
+        <section class="panel">
+            <form id="form">
+                <div class="divider">接入大模型 · AI 对话</div>
+                <div class="hint band">桌宠的对话由大模型驱动。请填入「你自己的」API 配置（不会内置任何密钥）。支持接入 DeepSeek 与 Ollama（本机本地大模型）；凡支持 OpenAI 兼容接口的服务也基本可接入。</div>
+                <div class="field">
+                    <label for="llmProvider">服务商 / 类型</label>
+                    <select id="llmProvider">
+                        <option value="deepseek">DeepSeek（云端 API）</option>
+                        <option value="ollama">Ollama（本地模型）</option>
+                    </select>
+                </div>
+                <div class="field" id="deepseekFields">
+                    <label for="apiKey">DeepSeek API Key</label>
+                    <input type="password" id="apiKey" placeholder="sk-…（提交后仅保存于本机 config.json）" autocomplete="off" />
+                    <div class="hint">在 DeepSeek 开放平台创建并记账充值后获取</div>
+                    <label for="baseUrl" style="margin-top:10px">接口地址（一般无需改）</label>
+                    <input type="text" id="baseUrl" placeholder="https://api.deepseek.com/v1" />
+                    <label for="model" style="margin-top:10px">模型名（一般无需改）</label>
+                    <input type="text" id="model" placeholder="deepseek-chat" />
+                </div>
+                <div class="field" id="ollamaFields" style="display:none">
+                    <label for="ollamaUrl">Ollama 服务地址</label>
+                    <input type="text" id="ollamaUrl" placeholder="http://127.0.0.1:11434" />
+                    <div class="hint">需先在本机运行 Ollama 并已拉取对应模型（命令：ollama pull 模型名）</div>
+                    <label for="ollamaModel" style="margin-top:10px">模型名</label>
+                    <input type="text" id="ollamaModel" placeholder="qwen2.5:7b" />
+                </div>
+                <div class="row">
+                    <button type="button" class="save" id="testLLM">测试连接</button>
+                    <button type="button" class="save" id="saveLLM">保存接入</button>
+                </div>
+                <p id="llmStatus" role="status"></p>
+                <div class="divider">外观与位置</div>
+                <div class="field">
+                    <label for="scale">整体缩放：<span id="scalev" style="font-weight:700">100</span>%</label>
+                    <input type="range" id="scale" min="30" max="150" step="1" value="100" />
+                    <div class="hint">拖动滑块整体等比例缩放桌宠，宽高同步变化、绝不变形（100% = 默认大小）</div>
+                </div>
+                <div class="field">
+                    <label for="px">窗口位置 X：<span id="pxv" style="font-weight:700">…</span> px</label>
+                    <input type="range" id="px" step="1" />
+                    <div class="hint">拖动滑块可实时移动桌宠（范围 = 当前屏幕工作区）</div>
+                </div>
+                <div class="field">
+                    <label for="py">窗口位置 Y：<span id="pyv" style="font-weight:700">…</span> px</label>
+                    <input type="range" id="py" step="1" />
+                    <div class="hint">拖动滑块可实时移动桌宠（范围 = 当前屏幕工作区）</div>
+                </div>
+                <div class="field">
+                    <label for="ps">物理强度：<span id="psv" style="font-weight:700">1.0</span> 倍</label>
+                    <input type="range" id="ps" min="0.1" max="5" step="0.1" value="1" />
+                    <div class="hint">数值越大，衣服/头发在待机时的物理飘动越明显</div>
+                </div>
+                <div class="field">
+                    <label for="rs">输出清晰度：<span id="rsv" style="font-weight:700">1.0</span>×</label>
+                    <input type="range" id="rs" min="1" max="2" step="0.1" value="1" />
+                    <div class="hint">数值越大，模型内部渲染分辨率越高、边缘越清晰，也更耗性能；1× 为默认（贴合屏幕），2× 最清晰</div>
+                </div>
+
+                <div class="divider">部位点击判定</div>
+                <div class="hint band">拖动下方分界线，可自定义点击模型不同部位（头 / 胸 / 腰 / 私处 / 腿 / 脚）的反馈范围。数值 = 分界点占模型画布高度的百分比，从上到下依次递增。</div>
+                <div class="field">
+                    <label for="bHead">头部分界：<span id="bHeadv" style="font-weight:700">25</span>%</label>
+                    <input type="range" id="bHead" min="0" max="40" step="1" value="25" />
+                    <div class="hint">0% ~ 此值 判为「头」（摸头反馈）</div>
+                </div>
+                <div class="field">
+                    <label for="bChest">胸部分界：<span id="bChestv" style="font-weight:700">34</span>%</label>
+                    <input type="range" id="bChest" min="5" max="55" step="1" value="34" />
+                    <div class="hint">头部分界 ~ 此值 判为「胸」</div>
+                </div>
+                <div class="field">
+                    <label for="bWaist">腰部分界：<span id="bWaistv" style="font-weight:700">45</span>%</label>
+                    <input type="range" id="bWaist" min="10" max="65" step="1" value="45" />
+                    <div class="hint">胸部分界 ~ 此值 判为「腰」</div>
+                </div>
+                <div class="field">
+                    <label for="bPriv">私处分界：<span id="bPrivv" style="font-weight:700">55</span>%</label>
+                    <input type="range" id="bPriv" min="20" max="75" step="1" value="55" />
+                    <div class="hint">腰部分界 ~ 此值 判为「私处」；若点私处被误判为腰，请把「腰部分界」调低、此值调高</div>
+                </div>
+                <div class="field">
+                    <label for="bFoot">脚部分界：<span id="bFootv" style="font-weight:700">60</span>%</label>
+                    <input type="range" id="bFoot" min="45" max="100" step="1" value="60" />
+                    <div class="hint">私处分界 ~ 此值 判为「腿」，此值 ~ 100% 判为「脚」</div>
+                </div>
+                <button type="submit" class="save" id="save">保存并生效</button>
+                <button type="button" class="save secondary" id="dock">贴回右下角</button>
+                <p id="status" role="status"></p>
+
+                <div class="chat">
+                    <h2>跟芙宁娜聊天</h2>
+                    <div class="hint">由你所接入的大模型驱动，回复会同步显示在桌宠的气泡里</div>
+                    <div class="row">
+                        <input type="text" id="chatInput" placeholder="想对芙宁娜说点什么…" maxlength="300" />
+                        <button type="button" class="send" id="chatSend">发送</button>
+                    </div>
+                    <div id="chatlog"></div>
+                </div>
+            </form>
+        </section>
+    </main>
+
+    <script>
+        const $ = (id) => document.getElementById(id);
+        const statusEl = $("status");
+
+        // 载入当前配置 + 屏幕信息（给位置滑块定范围）
+        async function load() {
+            try {
+                const [r1, r2] = await Promise.all([fetch("/api/settings"), fetch("/api/screen")]);
+                const cfg = await r1.json();
+                const scr = await r2.json();
+                $("scale").value = cfg.scalePercent || 100;
+                $("scalev").textContent = cfg.scalePercent || 100;
+                $("ps").value = cfg.physicsStrength || 1;
+                $("psv").textContent = (cfg.physicsStrength || 1).toFixed(1);
+                $("rs").value = cfg.renderScale || 1;
+                $("rsv").textContent = (cfg.renderScale || 1).toFixed(1);
+                // 部位点击判定分界（百分比）
+                const band = cfg.band || {};
+                const bandMap = { bHead: "headBottom", bChest: "chestBottom", bWaist: "waistBottom", bPriv: "legTop", bFoot: "footTop" };
+                const bandDef = { bHead: 25, bChest: 34, bWaist: 45, bPriv: 55, bFoot: 60 };
+                for (const id in bandMap) {
+                    const v = (band[bandMap[id]] !== undefined ? band[bandMap[id]] : bandDef[id]);
+                    $(id).value = v;
+                    $(id + "v").textContent = v;
+                }
+                // 位置滑块：范围 = 屏幕工作区可移动区间
+                const wa = scr.workArea;
+                const [ww, wh] = scr.windowSize || [0, 0];
+                const px = $("px"), py = $("py");
+                px.min = wa.x;
+                px.max = Math.max(wa.x, wa.x + wa.width - ww);
+                py.min = wa.y;
+                py.max = Math.max(wa.y, wa.y + wa.height - wh);
+                // 配置为 -1（自动贴右下角）时，滑块显示当前实际位置
+                let cx = cfg.positionX, cy = cfg.positionY;
+                if ((cx < 0 || cy < 0) && scr.windowPos) {
+                    cx = scr.windowPos[0]; cy = scr.windowPos[1];
+                }
+                px.value = cx; py.value = cy;
+                $("pxv").textContent = Math.round(cx); $("pyv").textContent = Math.round(cy);
+            } catch (e) {
+                statusEl.textContent = "读取配置失败，请确认桌宠正在运行。";
+                statusEl.className = "err";
+            }
+        }
+
+        // 缩放滑块实时显示数值
+        $("scale").addEventListener("input", () => {
+            $("scalev").textContent = $("scale").value;
+        });
+
+        // 物理强度滑块实时显示数值
+        $("ps").addEventListener("input", () => {
+            $("psv").textContent = Number($("ps").value).toFixed(1);
+        });
+
+        // 输出清晰度滑块实时显示数值
+        $("rs").addEventListener("input", () => {
+            $("rsv").textContent = Number($("rs").value).toFixed(1);
+        });
+
+        // 部位点击判定分界滑块：实时显示百分比
+        const bandIds = ["bHead", "bChest", "bWaist", "bPriv", "bFoot"];
+        bandIds.forEach((id) => {
+            $(id).addEventListener("input", (e) => {
+                $(id + "v").textContent = Number(e.target.value);
+            });
+        });
+
+        // 位置滑块：拖动时实时移动桌宠（节流 60ms），并写入 config.json 持久化
+        let moveTimer = null;
+        function moveWindow(axis, val) {
+            const cur = { x: Number($("px").value), y: Number($("py").value) };
+            cur[axis] = Number(val);
+            $("pxv").textContent = cur.x;
+            $("pyv").textContent = cur.y;
+            if (moveTimer) clearTimeout(moveTimer);
+            moveTimer = setTimeout(() => {
+                fetch("/api/move", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ x: cur.x, y: cur.y }),
+                }).catch(() => {});
+            }, 60);
+        }
+        $("px").addEventListener("input", (e) => moveWindow("x", e.target.value));
+        $("py").addEventListener("input", (e) => moveWindow("y", e.target.value));
+
+        // 贴回右下角：位置重置为 -1，由主进程自动贴齐
+        $("dock").addEventListener("click", async () => {
+            try {
+                await fetch("/api/settings", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ positionX: -1, positionY: -1 }),
+                });
+                statusEl.textContent = "已贴回右下角";
+                statusEl.className = "ok";
+                await load();
+            } catch (e) {
+                statusEl.textContent = "操作失败：" + (e.message || e);
+                statusEl.className = "err";
+            }
+        });
+
+        $("form").addEventListener("submit", async (ev) => {
+            ev.preventDefault();
+            const btn = $("save");
+            btn.disabled = true;
+            statusEl.textContent = "保存中…";
+            statusEl.className = "";
+            try {
+                const r = await fetch("/api/settings", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        scalePercent: Number($("scale").value),
+                        positionX: Number($("px").value),
+                        positionY: Number($("py").value),
+                        physicsStrength: Number($("ps").value),
+                        renderScale: Number($("rs").value),
+                        band: {
+                            headBottom: Number($("bHead").value),
+                            chestBottom: Number($("bChest").value),
+                            waistBottom: Number($("bWaist").value),
+                            legTop: Number($("bPriv").value),
+                            footTop: Number($("bFoot").value),
+                        },
+                    }),
+                });
+                const data = await r.json();
+                if (data.ok) {
+                    statusEl.textContent = "已保存，桌宠正在重新加载生效…";
+                    statusEl.className = "ok";
+                } else {
+                    throw new Error(data.error || "保存失败");
+                }
+            } catch (e) {
+                statusEl.textContent = "保存失败：" + (e.message || e);
+                statusEl.className = "err";
+            } finally {
+                btn.disabled = false;
+            }
+        });
+
+        // ---------- 接入大模型：读取 / 切换 / 测试 / 保存 ----------
+        const llmStatus = $("llmStatus");
+        function llmPayload() {
+            return {
+                provider: $("llmProvider").value,
+                apiKey: $("apiKey").value.trim(),
+                baseUrl: $("baseUrl").value.trim(),
+                model: $("model").value.trim(),
+                ollamaUrl: $("ollamaUrl").value.trim(),
+                ollamaModel: $("ollamaModel").value.trim(),
+            };
+        }
+        function syncProviderUI() {
+            const isOllama = $("llmProvider").value === "ollama";
+            $("ollamaFields").style.display = isOllama ? "block" : "none";
+            $("deepseekFields").style.display = isOllama ? "none" : "block";
+        }
+        $("llmProvider").addEventListener("change", syncProviderUI);
+        async function loadLLM() {
+            try {
+                const r = await fetch("/api/llm");
+                const d = await r.json();
+                if (d && d.ok && d.llm) {
+                    const l = d.llm;
+                    $("llmProvider").value = l.provider === "ollama" ? "ollama" : "deepseek";
+                    // 已填过的 Key 显示为掩码；用户可覆盖，留空则保留原值
+                    $("apiKey").placeholder = l.apiKey ? "已保存（" + l.apiKey + "）覆盖请输入新 Key" : "sk-…";
+                    $("baseUrl").value = l.baseUrl || "";
+                    $("model").value = l.model || "";
+                    $("ollamaUrl").value = l.ollamaUrl || "";
+                    $("ollamaModel").value = l.ollamaModel || "";
+                    $("apiKey").value = ""; // 出于安全不反向回填明文
+                    syncProviderUI();
+                    if (d.configured) llmStatus.textContent = "✅ 已接入大模型，可正常对话。";
+                    else llmStatus.textContent = "尚未接入大模型，请填写后保存（首次启动时会提醒你）。";
+                }
+            } catch {}
+        }
+        async function doLLM(action) {
+            const btn = action === "test" ? $("testLLM") : $("saveLLM");
+            btn.disabled = true;
+            llmStatus.className = "err";
+            llmStatus.textContent = action === "test" ? "连接测试中…" : "保存中…";
+            try {
+                const r = await fetch(action === "test" ? "/api/llm/test" : "/api/llm", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(llmPayload()),
+                });
+                const d = await r.json();
+                if (d.ok) {
+                    llmStatus.className = "ok";
+                    llmStatus.textContent = action === "test"
+                        ? "连接成功，回复： " + (d.reply || "")
+                        : "已保存接入，桌宠可正常对话了~";
+                    if (action === "save") loadLLM();
+                } else {
+                    throw new Error(d.error || "连接失败");
+                }
+            } catch (e) {
+                llmStatus.className = "err";
+                llmStatus.textContent = (action === "test" ? "连接失败： " : "保存失败： ") + (e.message || e);
+            } finally {
+                btn.disabled = false;
+            }
+        }
+        $("testLLM").addEventListener("click", () => doLLM("test"));
+        $("saveLLM").addEventListener("click", () => doLLM("save"));
+
+        // ---------- 聊天：发送后回复同时推送到桌宠气泡 ----------
+        const chatInput = $("chatInput"), chatSend = $("chatSend"), chatlog = $("chatlog");
+        function appendChat(role, text) {
+            const div = document.createElement("div");
+            div.className = "msg " + role;
+            div.textContent = text;
+            chatlog.appendChild(div);
+            chatlog.scrollTop = chatlog.scrollHeight;
+        }
+        async function sendChat() {
+            const msg = chatInput.value.trim();
+            if (!msg) return;
+            chatInput.value = "";
+            appendChat("user", msg);
+            chatSend.disabled = true;
+            try {
+                const r = await fetch("/api/chat", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ message: msg }),
+                });
+                const data = await r.json();
+                if (data.ok) appendChat("ai", data.reply);
+                else appendChat("ai", "（出错了）" + (data.error || ""));
+            } catch (e) {
+                appendChat("ai", "（出错了）" + (e.message || e));
+            } finally {
+                chatSend.disabled = false;
+                chatInput.focus();
+            }
+        }
+        chatSend.addEventListener("click", sendChat);
+        chatInput.addEventListener("keydown", (e) => { if (e.key === "Enter") sendChat(); });
+
+        load();
+        loadLLM();
+    </script>
+</body>
+</html>
