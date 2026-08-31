@@ -3,6 +3,8 @@
 A Live2D desktop pet that lives on your macOS / Windows screen, built with **Electron + PIXI + pixi-live2d5**. Transparent, frameless, always-on-top, mouse-click-through, draggable, and chatty. It supports **multiple characters** (Furina, Yae Miko, Nahida, Ganyu, Lauma…), per-character independent settings, a persistent **memory & personality evolution** system, and can be driven by **your own LLM** (DeepSeek / Ollama).
 
 > This project is for personal learning and entertainment only — **not for commercial use**. Model assets belong to their original artists / modellers / miHoYo. See [Model Sources & Copyright](#model-sources--copyright).
+>
+> **Copyright © 2025-2026 AnastasyaLiao. All rights reserved.** The program code is wholly authored by and copyrighted to **AnastasyaLiao**; model assets belong to their original artists / modellers / miHoYo.
 
 ---
 
@@ -36,10 +38,15 @@ A Live2D desktop pet that lives on your macOS / Windows screen, built with **Ele
 - **Login auto-start**: launches at login (toggle in the tray menu).
 - **Cross-platform (v3.0.0)**: now also runs on **Windows** with feature parity to macOS — the very same characters, memory, LLM, chat, screen awareness, game saver and tray. Platform branches are added to the shared main process, so the macOS build is left untouched.
 - **Adaptive chat bubble (v3.0.1)**: the speech bubble stretches wider for longer replies (up to 440 px) instead of wrapping into a tall narrow column; when the character sits on the right half of the screen (e.g. bottom-right corner), the bubble shifts left to use the free space; and the bubble now stays much longer — its hide delay scales with the reply length (up to ~20 s), so long messages no longer vanish too quickly.
-- **Strict anti-OOC / anti-hallucination persona framework (v3.0.1-pre)**: every enabled Genshin character now runs under a shared 6-rule **UNIVERSAL_HARD_RULES** guardrail and a per-character **knowledge boundary**. A new **full-profile first-load mechanism** injects a ~5000–6000 character complete official dossier (canon backstory, character stories 1–5, weapon/vision/constellation hard values, relationship chart, story beats, and canned trap-question dodges) only once per character, then flips a cached flag and switches to a lightweight compact framework for every subsequent call — so extra token cost is only paid the very first time you pick a character. Fully identical on **macOS and Windows**.
-  - **6 shared guardrails**: no hallucinating non-canon moves/visions/weapons/constellations; never joke about major tragedy story arcs (Sinner's Solo Waltz / Thousand-Armed Hundred-Eyed / Samsara / Sal Terrae massacre / Poisson sinking etc.); keep replies short; sound like yourself; no OOC; equal Traveler relationship (no master/retinue wording).
+- **Strict anti-OOC / anti-hallucination persona framework (v3.0.1-pre)**: every enabled Genshin character now runs under a shared 7-rule **UNIVERSAL_HARD_RULES** guardrail and a per-character **knowledge boundary**. A new **full-profile first-load mechanism** injects a ~5000–6000 character complete official dossier (canon backstory, character stories 1–5, weapon/vision/constellation hard values, relationship chart, story beats, and canned trap-question dodges) only once per character, then flips a cached flag and switches to a lightweight compact framework for every subsequent call — so extra token cost is only paid the very first time you pick a character. Fully identical on **macOS and Windows**.
+  - **7 shared guardrails**: no hallucinating non-canon moves/visions/weapons/constellations; never joke about major tragedy story arcs (Sinner's Solo Waltz / Thousand-Armed Hundred-Eyed / Samsara / Sal Terrae massacre / Poisson sinking etc.); keep replies short; sound like yourself; no OOC; equal Traveler relationship (no master/retinue wording); no body-action narration.
   - **Hard anti-hallucination points per character**: Furina (no Vision for 500 years — only obtains one at the end of her second Story Quest; sword user, not catalyst); Yae Miko (5-tailed Celestial Fox of the Hakushin lineage, **not** a nine-tailed kitsune; no Electro Gnosis after trading it with the Dottore); Nahida (born from Rukkhadevata's pure Irminsul branch — **not** a reincarnation; personally erased Rukkhadevata so the world no longer remembers her); Ganyu (Ice bow user, **not** catalyst or polearm; Qixing general secretary — **not** one of the Seven Qixing herself; constant drowsiness is a half-Qilin physical trait, not "slacking off").
   - **Knowledge boundary per character**: each character only knows what they personally lived through + their own nation's public info + what the Traveler shared with them. Secret details of other nations, future version story, Abyss interiors, Celestia specifics, etc. all get an honest "I don't really know that" reply in the character's own voice — no more made-up nation lore out of thin air.
+  - **No action descriptions (v3.0.2)**: added a 7th shared guardrail — all AI output is **banned from body-action / behaviour narration** (e.g. "(strokes your head) (turns and leaves)"), while subtle **facial-expression narration** such as "(blushes) (smiles)" is still allowed and kept brief. This applies to chat, hover mood lines and touch feedback alike, and every reply is kept in the AI context / memory.
+- **Per-character LLM switching (v3.0.2)**: each enabled character can now use its **own LLM connection** (provider / base URL / API key / model). Switch the model and the running prompt + locally-stored lines are swapped together, and the LLM the character talks to is swapped too — no more accidentally talking to the previous character's engine. Characters without their own config fall back to the global default. Fully identical on **macOS and Windows**.
+- **Token-frugal high-fidelity persona (v3.1.1)**: hover mood lines and part-touch feedback — the two **highest-frequency** short replies — now use the ultra-light `ULTRA_LIGHT_FORMAT_RULES` (~390 chars) that keep only what matters for fidelity (in-character tone, calling you "Traveler", ≤20 chars, expression brackets, affection tag), dropping the world-view / anti-hallucination / memory walls that used to be injected every single call (saving ~800–2500 chars per call). The 4 main characters' **first chat now injects a single copy** of "full world-view + full character dossier + meme library + hard rules" with the ~2900-char duplicate world-view removed. **All the fidelity core (character dossiers, personality, affection rules, Furina-specific hard rules) is untouched** — high fidelity with dramatically lower token usage.
+- **Bubble display fixes (v3.1.1)**: the speech bubble can no longer be "cut in half" by the transparent window edge (position is now clamped to the **window's visible area**, not the whole screen work area — fixes the long-standing issue where the right half of the bubble was clipped when the character sat in the bottom-right corner). The hide delay scales with reply length (base 5 s + ~0.25 s/char, up to 40 s) and stale hide-timers can no longer make new bubbles vanish early. Reply language is currently **always Simplified Chinese**, with an English capability reserved for future overseas users.
+- **Experimental bubble controls (v3.1.1)**: in Settings → **Experimental**, you can fine-tune the output bubble's **position offset** (horizontal/vertical, origin follows the model) and its **fixed width / max height** (0 = auto). Handy for placing the bubble exactly where you want it.
 
 ### Tech Stack
 
@@ -58,8 +65,8 @@ A Live2D desktop pet that lives on your macOS / Windows screen, built with **Ele
 
 Download from the [Releases](https://github.com/AnastasyaLiao/fpet-furina-mac-desktop-pet/releases) page.
 
-- **macOS (Apple Silicon)**: **fpet-3.0.1-pre-arm64.dmg** — open it and drag **fpet** into your Applications folder.
-- **Windows (x64)**: **fpet-3.0.1-pre-win-x64.exe** — run it and follow the installer.
+- **macOS (Apple Silicon)**: **fpet-3.1.1-arm64.dmg** — open it and drag **fpet** into your Applications folder.
+- **Windows (x64)**: **fpet-3.1.1-win-x64.exe** — run it and follow the installer.
 
 ### Usage
 
@@ -125,8 +132,8 @@ npm start        # launch the pet
 
 ```bash
 npm install
-npm run dist       # → dist/fpet-3.0.1-pre-arm64.dmg (macOS)
-npm run dist:win   # → dist/fpet-3.0.1-pre-win-x64.exe (Windows)
+npm run dist       # → dist/fpet-3.1.1-arm64.dmg (macOS)
+npm run dist:win   # → dist/fpet-3.1.1-win-x64.exe (Windows)
 ```
 
 ### License
@@ -137,6 +144,8 @@ npm run dist:win   # → dist/fpet-3.0.1-pre-win-x64.exe (Windows)
 ---
 
 ## 中文
+
+> **Copyright © 2025-2026 AnastasyaLiao · 保留所有权利。** 本程序全部代码著作权归 **AnastasyaLiao（作者）** 所有；模型资源版权归原画师 / 建模师 / miHoYo 所有。仅供个人学习与娱乐使用，禁止商用、盗卖、二次配布。
 
 ### 功能特性
 
@@ -166,10 +175,12 @@ npm run dist:win   # → dist/fpet-3.0.1-pre-win-x64.exe (Windows)
 - **开机自启**：登录时自动启动（可在托盘菜单开关）。
 - **跨平台（v3.0.0）**：除 macOS 外，新增 **Windows** 版本，功能与 macOS 几乎完全一致——同一套角色、记忆、接入大模型、对话、屏幕感知、游戏节能与托盘；主进程按平台分支实施，macOS 构建不受影响。
 - **更聪明的输出框（v3.0.1）**：回复内容越多，气泡越宽（最长 440px，短文保持窄小），不再挤成又高又窄的一列；当角色停留在屏幕右半区（如右下角）时，气泡自动向左平移展开，充分利用左侧空间；气泡停留时间与内容长度成正比（最长约 20 秒），长回复不会一闪而过。
-- **原神人设防乱编 / 防 OOC 框架（v3.0.1-pre，双平台一致）**：所有启用角色统一运行一套 **通用 6 条强制规则（UNIVERSAL_HARD_RULES）** 监督，并为每个角色划定独立的**知识范围硬边界**。新增的**「首加载完整版人设」机制**会在你第一次选中某个角色时，**一次性**注入约 5000~6000 字的官方档案全文（从背景故事、角色故事 1~5、神之眼/武器/命座硬值、人物关系网、关键剧情节点，到常见陷阱问题的回避模板）；写完持久化标志位后，后续全部走精简版框架——额外的 token 成本只在第一次产生，之后不再有。macOS 与 Windows 完全一致：
-  - **通用 6 条强制规则**：① 绝不乱编非官方招式、神之眼、武器、命座、人物关系、魔神名、历史；② 绝不调侃悲剧主线（罪人舞步旋 / 千手百眼 / 虚空鼓动 / 盐神灭族 / 白淞镇沉没等一律禁止当才艺）；③ 回复必须简短（日常 ≤20 字）；④ 说话必须像角色本人（禁万能温柔模板）；⑤ 禁猎奇 OOC；⑥ 身份平等（一律称旅行者，禁主仆口吻）。
+- **原神人设防乱编 / 防 OOC 框架（v3.0.1-pre，双平台一致）**：所有启用角色统一运行一套 **通用 7 条强制规则（UNIVERSAL_HARD_RULES）** 监督，并为每个角色划定独立的**知识范围硬边界**。新增的**「首加载完整版人设」机制**会在你第一次选中某个角色时，**一次性**注入约 5000~6000 字的官方档案全文（从背景故事、角色故事 1~5、神之眼/武器/命座硬值、人物关系网、关键剧情节点，到常见陷阱问题的回避模板）；写完持久化标志位后，后续全部走精简版框架——额外的 token 成本只在第一次产生，之后不再有。macOS 与 Windows 完全一致：
+  - **通用 7 条强制规则**：① 绝不乱编非官方招式、神之眼、武器、命座、人物关系、魔神名、历史；② 绝不调侃悲剧主线（罪人舞步旋 / 千手百眼 / 虚空鼓动 / 盐神灭族 / 白淞镇沉没等一律禁止当才艺）；③ 回复必须简短（日常 ≤20 字）；④ 说话必须像角色本人（禁万能温柔模板）；⑤ 禁猎奇 OOC；⑥ 身份平等（一律称旅行者，禁主仆口吻）；⑦ 禁止动作描写（只允许表情神态描写）。
   - **各角色防乱编硬点**：芙宁娜（500 年没有合法神之眼，直到传说任务 2 才拿到；单手剑不是法器；绝对答不出"海渡玛 / 休养生息 / 审判之舞"这类架空词）；八重神子（白辰血脉·五尾天狐，**不是九尾**；雷神之心早已与博士交换，不在身上）；纳西妲（大慈树王纯净枝杈所化，**不是转世**；亲手把大慈树王从世界树上抹除，世人已不记得）；甘雨（冰元素弓，**不是法器/长枪**；是七星**全体秘书**，自己不是七星；嗜睡是半麒麟生理，不是"摸鱼"）。
   - **每角色知识范围硬边界**：只回答自己亲身经历过的剧情、自己国家的公开信息、以及旅行者和自己分享过的事。他国高层秘辛、未来版本剧情、深渊内部、天空岛真相……一律用各自角色的语气坦诚说"不清楚"——再也不会凭空编造别国的历史或人物。
+  - **禁止动作描写（v3.0.2）**：新增第 7 条共用硬规则——**所有 AI 输出严禁肢体动作 / 行为描写**（如"（摸了摸你的头）（转身离开）（张开双臂抱住）"一律禁止），只允许「表情神态」类描写如（脸红）（微笑）且保持简短克制。对聊天、悬停情绪话、部位触碰反馈等全部生效，且每条回复都会计入 AI 上下文 / 记忆。
+- **按角色独立切换大模型（v3.0.2）**：每个启用角色都可以接入**自己的一套大模型**（厂商 / 接口地址 / API Key / 模型，DeepSeek 或 Ollama 均可）。切换角色时，会用到的提示词、本地保存的文案会一起切换，角色对话所调用的大模型也会自动切换——不再出现"切了角色却还在跟上一个角色的引擎对话"的问题。没有单独配置的角色默认沿用全局配置。macOS 与 Windows 完全一致。
 
 ### 技术栈
 
@@ -188,8 +199,8 @@ npm run dist:win   # → dist/fpet-3.0.1-pre-win-x64.exe (Windows)
 
 从 [Releases](https://github.com/AnastasyaLiao/fpet-furina-mac-desktop-pet/releases) 页面下载安装包。
 
-- **macOS（Apple Silicon）**：**fpet-3.0.1-pre-arm64.dmg**，打开后把 **fpet** 拖入「应用程序」即可。
-- **Windows（x64）**：**fpet-3.0.1-pre-win-x64.exe**，运行后按向导安装。
+- **macOS（Apple Silicon）**：**fpet-3.1.1-arm64.dmg**，打开后把 **fpet** 拖入「应用程序」即可。
+- **Windows（x64）**：**fpet-3.1.1-win-x64.exe**，运行后按向导安装。
 
 ### 常用交互
 
@@ -255,14 +266,27 @@ npm start        # 启动桌宠
 
 ```bash
 npm install
-npm run dist       # → dist/fpet-3.0.1-pre-arm64.dmg（macOS）
-npm run dist:win   # → dist/fpet-3.0.1-pre-win-x64.exe（Windows）
+npm run dist       # → dist/fpet-3.1.1-arm64.dmg（macOS）
+npm run dist:win   # → dist/fpet-3.1.1-win-x64.exe（Windows）
 ```
 
 ### 许可说明
 
 - **代码**：MIT License（见 LICENSE）。仅供学习交流，请勿商用。
 - **模型**：版权归 miHoYo / 画师 / 建模师所有；禁止商用、禁止盗卖、禁止二次配布（见上文[模型来源与版权](#模型来源与版权)）。
+
+---
+
+## v3.0.2-pre Release Notes
+
+- **按角色独立切换大模型（核心变更，双平台一致）**：之前所有角色共用同一套接入的大模型，切换角色后对话仍会调到上一个角色（或默认芙宁娜）的引擎，出现"切了角色却输出没变"的问题。现在**每个启用角色可以接入自己的一套大模型**（厂商 provider / 接口地址 baseUrl / API Key / 模型名，DeepSeek 与 Ollama 均可）。切换角色时，`electron/main.js` 会把 `perModel[角色].llm` 独立保存并按当前角色自动加载——**提示词、本地保存的文案、以及角色对话/悬停/触碰所调用的大模型会一同切换**；没有单独配置的角色默认沿用全局配置（不破坏原有用法）。
+  - 设置面板在**切换角色后会自动刷新该角色的 LLM 配置**，各角色的大模型字段互不影响。
+  - 未配置单独模型的角色仍可正常使用全局接入配置，升级不破坏原数据。
+- **禁止动作 / 行为描写（第 7 条共用硬规则，双平台一致）**：在 `UNIVERSAL_HARD_RULES` 新增第 7 条——**所有 AI 输出严禁肢体动作 / 行为描写**（如"（摸了摸你的头）（打你一下）（转身离开）（张开双臂抱住）"一律禁止），只允许「表情神态」类描写（如（脸红）（微笑）（微微蹙眉））且保持简短克制。对聊天、悬停情绪话、部位触碰反馈等全部生效；所有输出正常计入 AI 上下文与记忆。
+- **Token 精细化优化（高还原 + 省 token，双平台一致）**：悬停情绪话与部位触碰这类**高频短回复**改用极简「`ULTRA_LIGHT_FORMAT_RULES`」（约 390 字）——只保留「严格贴合原版语气、称呼旅行者、≤20 字、表情神态括号、好感度标签」等关键约束，不再注入世界观 / 防乱编剧情 / 记忆规则等长文，每次调用省 800~2500 字（胡桃/芭芭拉/奈芙尔/丝柯克省得最多，原为每次注入完整精简框架）；4 个主角色（芙宁娜/八重神子/纳西妲/甘雨）**首聊改为「完整版世界观 + 完整角色档案 + 梗语库 + 硬规则」单份注入**，去掉与精简版重复的约 2900 字世界观。**角色档案、性格设定、好感度细则、芙宁娜专属硬规则等还原度核心全部保留不变**，在维持高还原度的同时显著降低 token 消耗。
+- **版本号同步升级**：`package.json` 3.0.1-pre → **3.0.2-pre**；设置面板「顶部 badge」「侧边栏 badge」「中英文 i18n version.line」同步为 3.0.2-pre。
+- **跨平台一致（macOS + Windows 同步）**：以上变更全部落在共享主进程 `electron/main.js`、`settings.html` 和 `README.md`，**不改动任何 macOS 原有的平台分支代码**；Windows 版本使用 `npm run dist:win` 打包后获得完全相同的「按角色切换大模型 + 禁止动作描写 + 防 OOC」能力。
+- **验证提示**：给角色 A（如芙宁娜）接入 DeepSeek、给角色 B（如八重神子）接入 Ollama 或另一套 Key，切换到 B 后在「聊天测试」提问——应能明显感觉到接入与语气来自 B 自己的大模型；同时回复中不应再出现肢体动作描写的括号内容。
 
 ---
 

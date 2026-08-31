@@ -1,3 +1,9 @@
+<!--
+  fpet —— 原神桌面宠物（设置面板）
+  程序著作权声明：本程序全部代码著作权归 AnastasyaLiao 所有。
+  本软件仅供个人学习与娱乐使用，禁止商用、盗卖、二次配布。
+  模型资源版权归原画师 / 建模师 / miHoYo 所有。
+-->
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
@@ -374,6 +380,85 @@
         }
         #memoryContent b { color: var(--ink); }
 
+        /* ===== v3.1 记忆与调试二级菜单（Tab 切换） ===== */
+        .panel-tabs {
+            display: flex;
+            gap: 8px;
+            margin-top: 14px;
+            border-bottom: 1px solid var(--line-soft);
+            padding-bottom: 10px;
+            flex-wrap: wrap;
+        }
+        .tab-btn {
+            padding: 7px 16px;
+            border: 1px solid var(--line);
+            background: transparent;
+            border-radius: 20px;
+            font-size: 13px;
+            color: var(--muted);
+            cursor: pointer;
+            transition: border-color 0.18s, color 0.18s, background 0.18s, transform 0.15s;
+            font-family: inherit;
+        }
+        .tab-btn:hover { border-color: var(--accent); color: var(--accent-dark); transform: translateY(-1px); }
+        .tab-btn.active {
+            background: linear-gradient(135deg, var(--accent) 0%, var(--accent-dark) 100%);
+            color: #fff;
+            border-color: transparent;
+            font-weight: 600;
+        }
+        .tab-page { margin-top: 4px; }
+
+        /* ===== v3.1 聊天记录列表 ===== */
+        .chatlog-toolbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            margin-top: 14px;
+            flex-wrap: wrap;
+        }
+        .chatlog-meta { font-size: 12px; color: var(--muted); }
+        .chatlog-actions { display: flex; gap: 8px; }
+        #chatlogList {
+            margin-top: 12px;
+            max-height: 360px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            padding-right: 4px;
+        }
+        .chatlog-item {
+            border: 1px solid var(--line);
+            border-left: 3px solid var(--accent-soft);
+            border-radius: 10px;
+            padding: 9px 12px;
+            font-size: 13px;
+            line-height: 1.55;
+        }
+        .chatlog-item.user { border-left-color: var(--accent); }
+        .chatlog-head { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
+        .chatlog-item .who { font-weight: 600; font-size: 12px; }
+        .chatlog-item .who.user { color: var(--accent-dark); }
+        .chatlog-item .who.ai { color: var(--accent); }
+        .chatlog-item .when { font-size: 11px; color: var(--muted); margin-left: auto; }
+        .chatlog-item .body { white-space: pre-wrap; word-break: break-word; color: var(--ink); }
+        .chatlog-item .del {
+            margin-left: 2px;
+            background: none;
+            border: none;
+            color: var(--muted);
+            cursor: pointer;
+            font-size: 12px;
+            padding: 2px 6px;
+            border-radius: 6px;
+            line-height: 1;
+            transition: color 0.15s, background 0.15s;
+        }
+        .chatlog-item .del:hover { color: var(--danger); background: rgba(176, 82, 82, 0.08); }
+        .chatlog-empty { text-align: center; color: var(--muted); font-size: 13px; padding: 26px 0; }
+
         /* ===== 重置横幅 ===== */
         #resetBanner {
             margin-top: 14px;
@@ -665,7 +750,7 @@
     <header class="titlebar">
         <div class="titlebar-brand">
             <span class="titlebar-title">fpet · 设置面板</span>
-            <span class="badge">v3.0.1-pre · 提瓦特</span>
+            <span class="badge">v3.0.2-pre · 提瓦特</span>
         </div>
         <div class="titlebar-actions">
             <span class="lang-switch">
@@ -679,7 +764,7 @@
         <!-- 左侧导航 -->
         <aside class="sidebar">
             <h1 data-i18n="sidebar.title">桌面宠物<br>设置面板</h1>
-            <span class="badge">v3.0.1-pre · 提瓦特</span>
+            <span class="badge">v3.0.2-pre · 提瓦特</span>
             <nav>
                 <a href="#sec-llm" class="active" data-i18n="nav.ai">AI 对话接入</a>
                 <a href="#sec-model" data-i18n="nav.model">角色模型</a>
@@ -689,9 +774,10 @@
                 <a href="#sec-band" data-i18n="nav.band">部位判定</a>
                 <a href="#sec-debug" data-i18n="nav.debug">记忆与调试</a>
                 <a href="#sec-chat" data-i18n="nav.chat">聊天测试</a>
+                <a href="#sec-exp" data-i18n="nav.exp">试验性功能</a>
             </nav>
             <div class="version-info">
-                <span data-i18n="version.line">版本 3.0.1</span><br>
+                <span data-i18n="version.line">版本 3.1.1</span><br>
                 作者 AnastasyaLiao<br>
                 Live2D Cubism SDK 6.0
             </div>
@@ -791,6 +877,32 @@
                     </div>
                 </section>
 
+                <!-- ===== 试验性功能 ===== -->
+                <section class="card" id="sec-exp">
+                    <div class="card-title"><span class="icon">🧪</span><span data-i18n="exp.title">试验性功能</span></div>
+                    <div class="card-desc" data-i18n="exp.desc">输出气泡的位置与尺寸微调（原点跟随模型）。默认全部为 0 = 自动定位/自适应尺寸；适合喜欢手动摆放气泡位置与大小的高级用户。</div>
+                    <div class="field">
+                        <label for="bubbleOffsetX" data-i18n="exp.offsetX">气泡水平偏移：<span id="bubbleOffsetXv" style="font-weight:700"></span> px</label>
+                        <input type="range" id="bubbleOffsetX" min="-200" max="200" step="1" value="0" />
+                        <div class="hint" data-i18n="exp.offset.hint">正=向右移，负=向左移；在气泡自动位置（头顶/头部侧）基础上叠加</div>
+                    </div>
+                    <div class="field">
+                        <label for="bubbleOffsetY" data-i18n="exp.offsetY">气泡垂直偏移：<span id="bubbleOffsetYv" style="font-weight:700"></span> px</label>
+                        <input type="range" id="bubbleOffsetY" min="-200" max="200" step="1" value="0" />
+                        <div class="hint" data-i18n="exp.offset.hint">正=向下移，负=向上移；在气泡自动位置（头顶/头部侧）基础上叠加</div>
+                    </div>
+                    <div class="field">
+                        <label for="bubbleWidth" data-i18n="exp.width">气泡固定宽度：<span id="bubbleWidthv" style="font-weight:700"></span> px</label>
+                        <input type="range" id="bubbleWidth" min="0" max="560" step="1" value="0" />
+                        <div class="hint" data-i18n="exp.size.hint">0=按内容自动伸缩（最长 560px）；>0 时固定为指定宽度</div>
+                    </div>
+                    <div class="field">
+                        <label for="bubbleHeight" data-i18n="exp.height">气泡最大高度：<span id="bubbleHeightv" style="font-weight:700"></span> px</label>
+                        <input type="range" id="bubbleHeight" min="0" max="400" step="1" value="0" />
+                        <div class="hint" data-i18n="exp.size.hint">0=默认 360px；>0 时固定为指定高度，超出内容可滚动</div>
+                    </div>
+                </section>
+
                 <!-- ===== 开关与模式 ===== -->
                 <section class="card" id="sec-switch">
                     <div class="card-title"><span class="icon">⚙</span><span data-i18n="switch.title">开关与模式</span></div>
@@ -883,24 +995,41 @@
                     </div>
                 </section>
 
-                <!-- ===== 记忆与调试 ===== -->
+                <!-- ===== 记忆与调试（含聊天记录二级菜单） ===== -->
                 <section class="card" id="sec-debug">
                     <div class="card-title"><span class="icon">🔧</span><span data-i18n="debug.title">记忆与调试</span></div>
-                    <div id="memoryPanel">
-                        <div data-i18n="debug.mem.title">角色记忆档案</div>
-                        <div id="memoryContent" data-i18n="dyn.loading">加载中…</div>
-                        <button type="button" id="btnResetMemory" class="btn btn-ghost" style="margin-top:10px;" data-i18n="debug.reset">重置当前角色记忆</button>
+                    <div class="panel-tabs" id="debugTabs">
+                        <button type="button" class="tab-btn active" data-tab="memory" data-i18n="debug.tab.memory">记忆档案</button>
+                        <button type="button" class="tab-btn" data-tab="chatlog" data-i18n="debug.tab.chatlog">聊天记录</button>
                     </div>
-                    <div class="row" style="gap:10px; flex-wrap:wrap; margin-top:14px;">
-                        <button type="button" id="btnExportLog" class="btn btn-secondary" style="flex:1 1 180px;" data-i18n="debug.export">导出调试日志</button>
-                        <button type="button" id="btnOpenLogs" class="btn btn-ghost" style="flex:1 1 160px;" data-i18n="debug.open">打开日志目录</button>
+                    <div class="tab-page" id="tab-memory">
+                        <div id="memoryPanel">
+                            <div data-i18n="debug.mem.title">角色记忆档案</div>
+                            <div id="memoryContent" data-i18n="dyn.loading">加载中…</div>
+                            <button type="button" id="btnResetMemory" class="btn btn-ghost" style="margin-top:10px;" data-i18n="debug.reset">重置当前角色记忆</button>
+                        </div>
+                        <div class="row" style="gap:10px; flex-wrap:wrap; margin-top:14px;">
+                            <button type="button" id="btnExportLog" class="btn btn-secondary" style="flex:1 1 180px;" data-i18n="debug.export">导出调试日志</button>
+                            <button type="button" id="btnOpenLogs" class="btn btn-ghost" style="flex:1 1 160px;" data-i18n="debug.open">打开日志目录</button>
+                        </div>
+                        <div class="info-band" style="margin-top:12px;">
+                            <b data-i18n="debug.info.expTitle">导出日志</b>：<span data-i18n="debug.info.expDesc">一键把版本信息、系统状态、LLM 接口请求/报错、配置变更记录（含脱敏 Key）打包成 .txt。</span><br>
+                            <b data-i18n="debug.info.recTitle">自动恢复</b>：<span data-i18n="debug.info.recDesc">如果 config.json 被意外损坏，程序不会崩溃，自动备份并重置为出厂默认。</span>
+                        </div>
+                        <div id="resetBanner" class="status err" style="display:none;">
+                            <b data-i18n="debug.banner.title">配置已自动重置</b>：<span data-i18n="debug.banner.desc">config.json 解析失败，已备份为 <code>config.json.bak</code> 并恢复出厂默认。请重新设置个性化参数。</span>
+                        </div>
                     </div>
-                    <div class="info-band" style="margin-top:12px;">
-                        <b data-i18n="debug.info.expTitle">导出日志</b>：<span data-i18n="debug.info.expDesc">一键把版本信息、系统状态、LLM 接口请求/报错、配置变更记录（含脱敏 Key）打包成 .txt。</span><br>
-                        <b data-i18n="debug.info.recTitle">自动恢复</b>：<span data-i18n="debug.info.recDesc">如果 config.json 被意外损坏，程序不会崩溃，自动备份并重置为出厂默认。</span>
-                    </div>
-                    <div id="resetBanner" class="status err" style="display:none;">
-                        <b data-i18n="debug.banner.title">配置已自动重置</b>：<span data-i18n="debug.banner.desc">config.json 解析失败，已备份为 <code>config.json.bak</code> 并恢复出厂默认。请重新设置个性化参数。</span>
+                    <!-- ===== v3.1 聊天记录（记忆与调试的二级菜单） ===== -->
+                    <div class="tab-page" id="tab-chatlog" style="display:none;">
+                        <div class="chatlog-toolbar">
+                            <div class="chatlog-meta" id="chatlogMeta"></div>
+                            <div class="chatlog-actions">
+                                <button type="button" class="btn btn-ghost" id="btnRefreshLog" data-i18n="dyn.chatlog.refresh">刷新</button>
+                                <button type="button" class="btn btn-ghost" id="btnClearLog" data-i18n="dyn.chatlog.clear">清空记录</button>
+                            </div>
+                        </div>
+                        <div id="chatlogList"></div>
                     </div>
                 </section>
 
@@ -979,7 +1108,7 @@
                 "sidebar.title": "Desktop Pet<br>Settings",
                 "nav.ai": "AI &amp; Chat", "nav.model": "Character Model", "nav.render": "Appearance &amp; Rendering",
                 "nav.switch": "Toggles &amp; Modes", "nav.prompt": "Persona Custom", "nav.band": "Touch Zones",
-                "nav.debug": "Memory &amp; Debug", "nav.chat": "Chat Test", "version.line": "Version 3.0.1-pre",
+                "nav.debug": "Memory &amp; Debug", "nav.chat": "Chat Test", "nav.exp": "Experimental", "version.line": "Version 3.1.1",
                 "llm.title": "LLM Integration · AI Chat",
                 "llm.info": "The pet's chat is driven by a large model. Fill in <b>your own</b> API (no keys are bundled). DeepSeek and Ollama (local) are supported; any OpenAI-compatible service basically works.",
                 "llm.provider.label": "Provider / Type",
@@ -1007,6 +1136,14 @@
                 "render.opacity.hint": "Adjust the pet's overall opacity (10%~100%) to blend better with your wallpaper",
                 "render.fps": "Target FPS: <span id='targetFpsVal' style='font-weight:700;color:var(--accent-dark);'></span> fps",
                 "render.fps.hint": "Stable render FPS. 23 by default; raise for smoother, lower saves CPU/power. Range 15~120.",
+                "exp.title": "Experimental",
+                "exp.desc": "Fine-tune the output bubble's position and size (origin follows the model). All 0 = automatic positioning / auto-sized; for advanced users who like to place the bubble manually.",
+                "exp.offsetX": "Bubble horizontal offset: <span id='bubbleOffsetXv' style='font-weight:700'></span> px",
+                "exp.offsetY": "Bubble vertical offset: <span id='bubbleOffsetYv' style='font-weight:700'></span> px",
+                "exp.offset.hint": "Positive = move right/down, negative = move left/up; applied on top of the auto position (above head / beside head)",
+                "exp.width": "Bubble fixed width: <span id='bubbleWidthv' style='font-weight:700'></span> px",
+                "exp.height": "Bubble max height: <span id='bubbleHeightv' style='font-weight:700'></span> px",
+                "exp.size.hint": "0 = auto (width up to 560px / height default 360px); &gt;0 = fixed value, overflowing content scrolls",
                 "switch.title": "Toggles &amp; Modes",
                 "switch.muted": "Mute Mode", "switch.muted.desc": "Show no chat bubbles / emotion lines, keeping only Live2D animation and expressions. Good for pure animation or quiet work.",
                 "switch.volume": "Volume-Aware Emotion", "switch.volume.desc": "Periodically reads macOS output volume: loud → cheerful, muted → calm companion expression.",
@@ -1039,6 +1176,12 @@
                 "debug.info.expTitle": "Export logs", "debug.info.expDesc": "Package version info, system status, LLM request/errors, and config change logs (with masked keys) into a .txt in one click.",
                 "debug.info.recTitle": "Auto recovery", "debug.info.recDesc": "If config.json gets corrupted, the app won't crash; it backs it up and resets to factory defaults.",
                 "debug.banner.title": "Config auto-reset", "debug.banner.desc": "config.json failed to parse; backed up to <code>config.json.bak</code> and restored to factory defaults. Please re-set your preferences.",
+                "debug.tab.memory": "Memory Profile", "debug.tab.chatlog": "Chat History",
+                "dyn.chatlog.refresh": "Refresh", "dyn.chatlog.clear": "Clear All",
+                "dyn.chatlog.loading": "Loading…", "dyn.chatlog.empty": "No chat history yet", "dyn.chatlog.fail": "Failed to load chat history",
+                "dyn.chatlog.you": "Traveler", "dyn.chatlog.total": "total",
+                "dyn.chatlog.delConfirm": "Delete this message?", "dyn.chatlog.clearConfirm": "Clear all chat history for this character? This cannot be undone.",
+                "dyn.chatlog.cleared": "Chat history cleared", "dyn.chatlog.deleted": "Message deleted",
                 "chat.title": "Chat Test", "chat.desc": "Driven by the LLM you connected; replies also show in the pet's bubble.",
                 "chat.ph": "Say something to the pet…", "chat.send": "Send",
                 "bar.save": "Save &amp; Apply", "bar.reset": "Reset to defaults",
@@ -1091,7 +1234,7 @@
                 "sidebar.title": "桌面宠物<br>设置面板",
                 "nav.ai": "AI 对话接入", "nav.model": "角色模型", "nav.render": "外观与渲染",
                 "nav.switch": "开关与模式", "nav.prompt": "人设定制", "nav.band": "部位判定",
-                "nav.debug": "记忆与调试", "nav.chat": "聊天测试", "version.line": "版本 3.0.1-pre",
+                "nav.debug": "记忆与调试", "nav.chat": "聊天测试", "nav.exp": "试验性功能", "version.line": "版本 3.1.1",
                 "llm.title": "接入大模型 · AI 对话",
                 "llm.info": "桌宠的对话由大模型驱动。请填入「你自己的」API 配置（不会内置任何密钥）。支持接入 DeepSeek 与 Ollama（本机本地大模型）；凡支持 OpenAI 兼容接口的服务也基本可接入。",
                 "llm.provider.label": "服务商 / 类型",
@@ -1119,6 +1262,14 @@
                 "render.opacity.hint": "调节桌宠模型的整体不透明度（10%~100%），可与桌面壁纸更好地融合",
                 "render.fps": "目标帧率：<span id='targetFpsVal' style='font-weight:700;color:var(--accent-dark);'></span> fps",
                 "render.fps.hint": "稳定渲染帧率。默认 23fps，可提高流畅或降低省资源。范围 15~120。",
+                "exp.title": "试验性功能",
+                "exp.desc": "输出气泡的位置与尺寸微调（原点跟随模型）。默认全部为 0 = 自动定位/自适应尺寸；适合喜欢手动摆放气泡位置与大小的高级用户。",
+                "exp.offsetX": "气泡水平偏移：<span id='bubbleOffsetXv' style='font-weight:700'></span> px",
+                "exp.offsetY": "气泡垂直偏移：<span id='bubbleOffsetYv' style='font-weight:700'></span> px",
+                "exp.offset.hint": "正=向右/向下移，负=向左/向上移；在气泡自动位置（头顶/头部侧）基础上叠加",
+                "exp.width": "气泡固定宽度：<span id='bubbleWidthv' style='font-weight:700'></span> px",
+                "exp.height": "气泡最大高度：<span id='bubbleHeightv' style='font-weight:700'></span> px",
+                "exp.size.hint": "0=按内容自动伸缩（宽度最长 560px / 高度默认 360px）；>0 时固定为指定值，超出内容可滚动",
                 "switch.title": "开关与模式",
                 "switch.muted": "静音模式", "switch.muted.desc": "开启后，桌宠不再显示任何聊天气泡/情绪台词，只保留 Live2D 动画与表情。适合纯动画观赏或安静工作场景。",
                 "switch.volume": "音量感知情绪反馈", "switch.volume.desc": "开启后，桌宠会定期读取 macOS 系统输出音量做反应：大音量 → 欢快表情；静音 → 安静陪伴表情。",
@@ -1151,6 +1302,12 @@
                 "debug.info.expTitle": "导出日志", "debug.info.expDesc": "一键把版本信息、系统状态、LLM 接口请求/报错、配置变更记录（含脱敏 Key）打包成 .txt。",
                 "debug.info.recTitle": "自动恢复", "debug.info.recDesc": "如果 config.json 被意外损坏，程序不会崩溃，自动备份并重置为出厂默认。",
                 "debug.banner.title": "配置已自动重置", "debug.banner.desc": "config.json 解析失败，已备份为 <code>config.json.bak</code> 并恢复出厂默认。请重新设置个性化参数。",
+                "debug.tab.memory": "记忆档案", "debug.tab.chatlog": "聊天记录",
+                "dyn.chatlog.refresh": "刷新", "dyn.chatlog.clear": "清空记录",
+                "dyn.chatlog.loading": "加载中…", "dyn.chatlog.empty": "还没有聊天记录", "dyn.chatlog.fail": "聊天记录加载失败",
+                "dyn.chatlog.you": "旅行者", "dyn.chatlog.total": "共",
+                "dyn.chatlog.delConfirm": "确定删除这条消息？", "dyn.chatlog.clearConfirm": "确定清空该角色的全部聊天记录？此操作不可撤销。",
+                "dyn.chatlog.cleared": "聊天记录已清空", "dyn.chatlog.deleted": "消息已删除",
                 "chat.title": "聊天测试", "chat.desc": "由你所接入的大模型驱动，回复会同步显示在桌宠的气泡里。",
                 "chat.ph": "想对桌宠说点什么…", "chat.send": "发送",
                 "bar.save": "保存并生效", "bar.reset": "恢复默认",
@@ -1203,7 +1360,7 @@
         let lang = "en"; // 默认英文
         function t(key) { const v = I18N[lang] && I18N[lang][key]; return (v != null) ? v : (I18N.en[key] != null ? I18N.en[key] : key); }
         function fillValueSpans() {
-            const map = { scale:["scalev",""], ps:["psv",""], rs:["rsv",""], opacity:["opacityv","%"], targetFps:["targetFpsVal",""], px:["pxv",""], py:["pyv",""], bHead:["bHeadv","%"], bChest:["bChestv","%"], bWaist:["bWaistv","%"], bPriv:["bPrivv","%"], bFoot:["bFootv","%"] };
+            const map = { scale:["scalev",""], ps:["psv",""], rs:["rsv",""], opacity:["opacityv","%"], targetFps:["targetFpsVal",""], px:["pxv",""], py:["pyv",""], bHead:["bHeadv","%"], bChest:["bChestv","%"], bWaist:["bWaistv","%"], bPriv:["bPrivv","%"], bFoot:["bFootv","%"], bubbleOffsetX:["bubbleOffsetXv"," px"], bubbleOffsetY:["bubbleOffsetYv"," px"], bubbleWidth:["bubbleWidthv"," px"], bubbleHeight:["bubbleHeightv"," px"] };
             for (const inputId in map) {
                 const [spanId, suffix] = map[inputId];
                 const el = document.getElementById(spanId), inp = document.getElementById(inputId);
@@ -1299,6 +1456,13 @@
                     $(id).value = v;
                     $(id + "v").textContent = v;
                 }
+                // v3.1.1：试验性功能 —— 输出气泡位置/尺寸
+                const bubbleKeys = ["bubbleOffsetX", "bubbleOffsetY", "bubbleWidth", "bubbleHeight"];
+                bubbleKeys.forEach((k) => {
+                    const v = Number(cfg[k]) || 0;
+                    $(k).value = v;
+                    $(k + "v").textContent = v;
+                });
                 const wa = scr.workArea;
                 const [ww, wh] = scr.windowSize || [0, 0];
                 const px = $("px"), py = $("py");
@@ -1330,6 +1494,11 @@
         $("rs").addEventListener("input", () => { $("rsv").textContent = Number($("rs").value).toFixed(1); });
         $("opacity").addEventListener("input", () => { $("opacityv").textContent = $("opacity").value; });
         $("targetFps").addEventListener("input", () => { $("targetFpsVal").textContent = $("targetFps").value; });
+
+        // v3.1.1：试验性功能 —— 输出气泡位置/尺寸实时显示数值
+        ["bubbleOffsetX", "bubbleOffsetY", "bubbleWidth", "bubbleHeight"].forEach((id) => {
+            $(id).addEventListener("input", (e) => { $(id + "v").textContent = Number(e.target.value); });
+        });
 
         const bandIds = ["bHead", "bChest", "bWaist", "bPriv", "bFoot"];
         bandIds.forEach((id) => {
@@ -1393,14 +1562,20 @@
                             legTop: Number($("bPriv").value),
                             footTop: Number($("bFoot").value),
                         },
+                        // v3.1.1：试验性功能 —— 输出气泡位置/尺寸
+                        bubbleOffsetX: Number($("bubbleOffsetX").value),
+                        bubbleOffsetY: Number($("bubbleOffsetY").value),
+                        bubbleWidth: Number($("bubbleWidth").value),
+                        bubbleHeight: Number($("bubbleHeight").value),
                     });
                 if (data.ok) {
                     statusEl.textContent = t("dyn.savedReload");
                     statusEl.className = "ok";
                     // v2.0.3 切换了角色：刷新表单，显示目标角色的专属设置（位置/缩放/人设等各不同）
+                    // v3.0.2 同时刷新 LLM 配置：每个角色可接入各自的大模型
                     const submittedModel = $("modelPath").value;
                     if (submittedModel && submittedModel !== currentModelPath) {
-                        setTimeout(async () => { await load(); }, 600);
+                        setTimeout(async () => { await load(); await loadLLM(); }, 600);
                     }
                 } else {
                     throw new Error(data.error || "保存失败");
@@ -1596,6 +1771,117 @@
                             refreshMemory();
                             toast(t("dyn.memResetDone"));
                         } catch (e) { toast(t("dyn.memResetFail"), "err"); }
+                    });
+                }
+            })();
+
+            // ===== v3.1 记忆与调试二级菜单：Tab 切换 =====
+            (function initDebugTabs() {
+                const tabs = document.querySelectorAll("#debugTabs .tab-btn");
+                const pages = {
+                    memory: document.getElementById("tab-memory"),
+                    chatlog: document.getElementById("tab-chatlog"),
+                };
+                function show(name) {
+                    tabs.forEach((btn) => btn.classList.toggle("active", btn.getAttribute("data-tab") === name));
+                    Object.keys(pages).forEach((k) => {
+                        if (pages[k]) pages[k].style.display = k === name ? "" : "none";
+                    });
+                    if (name === "chatlog") loadChatLog();
+                }
+                tabs.forEach((btn) => btn.addEventListener("click", () => show(btn.getAttribute("data-tab"))));
+                show("memory");
+            })();
+
+            // ===== v3.1 聊天记录：加载 / 删除单条 / 清空 =====
+            function fmtTime(iso) {
+                if (!iso) return "";
+                const d = new Date(iso);
+                if (isNaN(d.getTime())) return "";
+                const p = (n) => String(n).padStart(2, "0");
+                return `${d.getMonth() + 1}-${d.getDate()} ${p(d.getHours())}:${p(d.getMinutes())}`;
+            }
+            async function loadChatLog() {
+                const listEl = document.getElementById("chatlogList");
+                const metaEl = document.getElementById("chatlogMeta");
+                if (!listEl) return;
+                listEl.innerHTML = '<div class="chatlog-empty">' + t("dyn.chatlog.loading") + "</div>";
+                try {
+                    const d = await api.request("/api/chat-history").then((r) => r.json());
+                    if (!d.ok) {
+                        listEl.innerHTML = '<div class="chatlog-empty">' + t("dyn.chatlog.fail") + "</div>";
+                        return;
+                    }
+                    if (metaEl) metaEl.textContent = d.character + " · " + t("dyn.chatlog.total") + " " + d.total;
+                    if (!d.history || !d.history.length) {
+                        listEl.innerHTML = '<div class="chatlog-empty">' + t("dyn.chatlog.empty") + "</div>";
+                        return;
+                    }
+                    const frag = document.createDocumentFragment();
+                    // 正序显示（旧在上、新在下，一直往下更新）
+                    for (let k = 0; k < d.history.length; k++) {
+                        const it = d.history[k];
+                        const isUser = it.role === "user";
+                        const who = isUser ? t("dyn.chatlog.you") : d.character;
+                        const when = it.ts ? fmtTime(it.ts) : "";
+                        const item = document.createElement("div");
+                        item.className = "chatlog-item" + (isUser ? " user" : "");
+                        const head = document.createElement("div");
+                        head.className = "chatlog-head";
+                        const whoEl = document.createElement("span");
+                        whoEl.className = "who" + (isUser ? " user" : " ai");
+                        whoEl.textContent = who;
+                        head.appendChild(whoEl);
+                        if (when) {
+                            const whenEl = document.createElement("span");
+                            whenEl.className = "when";
+                            whenEl.textContent = when;
+                            head.appendChild(whenEl);
+                        }
+                        const delBtn = document.createElement("button");
+                        delBtn.type = "button";
+                        delBtn.className = "del";
+                        delBtn.textContent = "✕";
+                        delBtn.title = t("dyn.chatlog.delConfirm");
+                        delBtn.addEventListener("click", async () => {
+                            if (!confirm(t("dyn.chatlog.delConfirm"))) return;
+                            try {
+                                const r = await api.request("/api/chat-history", {
+                                    method: "DELETE",
+                                    body: JSON.stringify({ index: it.i }),
+                                }).then((rr) => rr.json());
+                                if (r.ok) { loadChatLog(); toast(t("dyn.chatlog.deleted")); }
+                                else toast(t("dyn.chatlog.fail"), "err");
+                            } catch { toast(t("dyn.chatlog.fail"), "err"); }
+                        });
+                        head.appendChild(delBtn);
+                        const bodyEl = document.createElement("div");
+                        bodyEl.className = "body";
+                        bodyEl.textContent = it.content;
+                        item.appendChild(head);
+                        item.appendChild(bodyEl);
+                        frag.appendChild(item);
+                    }
+                    listEl.innerHTML = "";
+                    listEl.appendChild(frag);
+                    // 列表正序（旧在上新在下），加载后滚到底部让最新消息可见
+                    listEl.scrollTop = listEl.scrollHeight;
+                } catch {
+                    listEl.innerHTML = '<div class="chatlog-empty">' + t("dyn.chatlog.fail") + "</div>";
+                }
+            }
+            (function bindChatLogActions() {
+                const btnRefresh = document.getElementById("btnRefreshLog");
+                const btnClear = document.getElementById("btnClearLog");
+                if (btnRefresh) btnRefresh.addEventListener("click", loadChatLog);
+                if (btnClear) {
+                    btnClear.addEventListener("click", async () => {
+                        if (!confirm(t("dyn.chatlog.clearConfirm"))) return;
+                        try {
+                            const r = await api.request("/api/chat-history/clear", { method: "POST" }).then((rr) => rr.json());
+                            if (r.ok) { loadChatLog(); toast(t("dyn.chatlog.cleared")); }
+                            else toast(t("dyn.chatlog.fail"), "err");
+                        } catch { toast(t("dyn.chatlog.fail"), "err"); }
                     });
                 }
             })();
