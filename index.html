@@ -55,6 +55,8 @@
         }
         #bubble.scroll {
             overflow-y: auto;
+            /* v2.1.2 修复：长文气泡默认被 pointer-events:none 拦截，鼠标滚轮无法滚动；出现滚动条时恢复指针交互以支持滚动 */
+            pointer-events: auto;
         }
         /* ===== v2.0 Round2 方向E：细滚动条美化（不抢视线，长文可上下滚动） ===== */
         #bubble::-webkit-scrollbar {
@@ -1523,6 +1525,7 @@
                         bubbleEl.classList.add("show");
                         bubbleEl.classList.remove("scroll");
                         bubbleEl.textContent = "";
+                        bubbleEl.scrollTop = 0;
                         placeChatUI();
                     }
                     let streamText = "";
@@ -1553,7 +1556,11 @@
                                             if (bubbleEl) {
                                                 bubbleEl.textContent = streamText;
                                                 placeChatUI();
-                                                if (bubbleEl.scrollHeight > bubbleEl.clientHeight + 4) bubbleEl.classList.add("scroll");
+                                                if (bubbleEl.scrollHeight > bubbleEl.clientHeight + 4) {
+                                                    bubbleEl.classList.add("scroll");
+                                                    // v2.1.2 修复：出现滚动条时自动滚到底，保证最新输出始终可见
+                                                    bubbleEl.scrollTop = bubbleEl.scrollHeight;
+                                                }
                                             }
                                         }
                                         if (d.ok && d.done) {

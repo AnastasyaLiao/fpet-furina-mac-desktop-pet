@@ -1678,6 +1678,16 @@ async function pollFullscreenAutoHide() {
 }
 
 // ---------- 自包含本地静态服务器 ----------
+// =====================================================================
+// 【后期接入 FastAPI + MySQL 的“门”】
+// 本服务既是「桌宠页面 + 设置面板」的静态托管，也是后端 API 网关：
+//   · 下方 /api/* 一组接口（settings / move / screen / llm / chat / memory / logs …）
+//     即为与前端完全解耦的 REST 规范，可直接平移为 FastAPI 路由；
+//   · 目前配置与记忆通过 readConfig()/writeConfig() 落盘到本机 config.json；
+//     后期切换 MySQL 时，只需把这两个读写函数改为 SQLAlchemy 实现，
+//     并把前端的 API_BASE 指向 FastAPI 服务地址（见 settings.html 的 apiClient），
+//     页面与桌宠的调用方式均无需改动。
+// =====================================================================
 const ROOT = path.join(__dirname, "..");
 const PORT = 8623;
 const MIME = {
@@ -1692,13 +1702,14 @@ const MIME = {
   ".vert": "text/plain; charset=utf-8",
 };
 function startStaticServer() {
-  http
-    .createServer((req, res) => {
+  return new Promise((resolve) => {
+    http
+      .createServer((req, res) => {
       try {
         let p = decodeURIComponent((req.url || "/").split("?")[0]);
         if (p === "/") p = "/index.html";
 
-        // ---------- 配置 API（供设置面板调用） ----------
+        // ---------- API 网关（供设置面板调用；未来整体迁移到 FastAPI） ----------
         if (p.startsWith("/api/")) {
           res.setHeader("Access-Control-Allow-Origin", "*");
           res.setHeader("Content-Type", "application/json; charset=utf-8");
@@ -2195,10 +2206,15 @@ function startStaticServer() {
         res.writeHead(404).end();
       }
     })
-    .listen(PORT, "127.0.0.1", () => console.log(`[宠物] 服务已启动 http://127.0.0.1:${PORT}/`));
+    .listen(PORT, "127.0.0.1", () => {
+      console.log(`[宠物] 服务已启动 http://127.0.0.1:${PORT}/`);
+      resolve();
+    });
+  });
 }
 
 let win = null;
+let settingsWin = null; // 设置面板的图形化窗口（原生 BrowserWindow）
 let tray = null;
 let cursorTimer = null;
 
@@ -2258,7 +2274,7 @@ ipcMain.on("pet:hover", (_event, hit) => {
 // 右键模型弹菜单：设置 / 退出（渲染进程在模型本体上右键时上报）
 ipcMain.on("pet:menu", (event) => {
   const menu = Menu.buildFromTemplate([
-    { label: "打开设置面板", click: () => shell.openExternal(`http://127.0.0.1:${PORT}/settings.html`) },
+    { label: "打开设置面板", click: () => openSettingsWindow() },
     { type: "separator" },
     { label: "退出宠物", click: () => app.quit() },
   ]);
@@ -2459,6 +2475,44 @@ function createWindow() {
   win.on("closed", () => (win = null));
 }
 
+// ---------- 设置面板：原生图形化窗口（取代浏览器打开网页） ----------
+// v2.2.0 把设置界面从「系统浏览器网页」改为 Electron 原生窗口：
+//   · titleBarStyle: 'hiddenInset' → macOS 左上角显示原生红绿灯（红关闭/黄最小化/绿全屏）
+//     标题栏文字隐藏，右侧自绘的关闭/最小化按钮同步移除；
+//   · 单例：重复打开只聚焦已存在的窗口，避免堆叠多个设置窗口。
+// 设置页仍通过本地 HTTP 服务的 /api/* 网关读写配置（与原来网页版完全一致）。
+function openSettingsWindow() {
+  if (settingsWin && !settingsWin.isDestroyed()) {
+    if (settingsWin.isMinimized()) settingsWin.restore();
+    settingsWin.focus();
+    return;
+  }
+  settingsWin = new BrowserWindow({
+    width: 1120,
+    height: 780,
+    minWidth: 900,
+    minHeight: 620,
+    title: "fpet · 设置面板",
+    frame: false,
+    titleBarStyle: "hiddenInset", // macOS 原生红绿灯：隐藏标题文字，保留左上红/黄/绿交通灯
+    backgroundColor: "#f4efe6",
+    show: false,
+    webPreferences: {
+      preload: path.join(__dirname, "preload.js"),
+      contextIsolation: true,
+      nodeIntegration: false,
+      backgroundThrottling: false,
+      webSecurity: false,
+    },
+  });
+  settingsWin.center();
+  settingsWin.loadURL(`http://127.0.0.1:${PORT}/settings.html`);
+  settingsWin.once("ready-to-show", () => settingsWin.show());
+  settingsWin.webContents.on("console-message", (_e, level, message) => console.log(`[设置页:${level}] ${message}`));
+  settingsWin.webContents.on("did-fail-load", (_e, code, desc) => console.log(`[设置页加载失败] ${code} ${desc}`));
+  settingsWin.on("closed", () => (settingsWin = null));
+}
+
 function createTray() {
   const icon = nativeImage.createFromDataURL(
     "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAKUlEQVQ4y2NgGAWjYBSMglEwCkbBKBgFo2AUjIJRMApGwSgYBaNgFAAAEqQAAUGl1gIAAAAASUVORK5CYII="
@@ -2468,7 +2522,7 @@ function createTray() {
   const autoLabel = isAutoLaunchEnabled() ? "关闭开机自启" : "开启开机自启";
   tray.setContextMenu(
     Menu.buildFromTemplate([
-      { label: "打开设置面板", click: () => shell.openExternal(`http://127.0.0.1:${PORT}/settings.html`) },
+      { label: "打开设置面板", click: () => openSettingsWindow() },
       { label: "显示 / 隐藏", click: () => { if (!win) return; win.isVisible() ? win.hide() : win.show(); } },
       { label: "贴回右下角", click: () => { if (!win) return; writeConfig({ positionX: -1, positionY: -1 }); placeWindow(); } },
       { label: autoLabel, click: () => { isAutoLaunchEnabled() ? removeAutoLaunch() : installAutoLaunch(); createTray(); } },
@@ -2499,7 +2553,7 @@ function scheduleWelcome() {
     if (cfg.llm) cfg.llm.setupPrompts = 1;
     else cfg.llm = Object.assign({}, LLM_DEFAULTS, { setupPrompts: 1 });
     fs.writeFileSync(CONFIG_PATH, JSON.stringify(cfg, null, 2));
-    try { shell.openExternal(`http://127.0.0.1:${PORT}/settings.html`); } catch {}
+    try { openSettingsWindow(); } catch {}
     setTimeout(() => sendSpeech("（小脸红）\n旅行者，想跟人家聊天的话，请去设置面板填入你自己的大模型 API 哦~"), 7000);
   }
   // 第 2、3 次提醒：若仍未接入再重复
@@ -2521,10 +2575,10 @@ function scheduleWelcome() {
   }, 180 * 1000);
 }
 
-app.whenReady().then(() => {
+app.whenReady().then(async () => {
   // macOS：隐藏 Dock 图标（桌宠常驻屏幕右下角，不需要出现在 Dock 中）
   try { if (app.dock) app.dock.hide(); } catch {}
-  startStaticServer();
+  await startStaticServer(); // 等待 HTTP 服务真正监听就绪，再创建窗口（避免 loadURL 提前失败弹 Electron 默认欢迎页）
   createWindow();
   createTray();
   installAutoLaunch(); // 按要求设置开机自启（幂等，重复启动无副作用）
@@ -2539,7 +2593,7 @@ app.whenReady().then(() => {
   });
   // Cmd+Shift+S：快速打开设置面板
   globalShortcut.register("Command+Shift+S", () => {
-    shell.openExternal(`http://127.0.0.1:${PORT}/settings.html`);
+    openSettingsWindow();
   });
 });
 
