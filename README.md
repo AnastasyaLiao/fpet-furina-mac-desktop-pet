@@ -10,7 +10,7 @@ A Live2D desktop pet that lives on your macOS screen, built with **Electron + PI
 
 ### Features
 
-- **Multi-character support**: Furina, Yae Miko, Nahida, Ganyu and Lauma are fully enabled; Hu Tao, Barbara, Nefer and Skirk are ready in `models/` (greyed out in the settings until their prompts/layouts are tuned).
+- **Multi-character support**: Furina, Yae Miko, Nahida and Ganyu are fully enabled; Hu Tao, Barbara, Nefer, Skirk and Lauma are ready in `models/` (greyed out in the settings until their prompts/layouts are tuned).
 - **Per-character independent settings**: scale, position, opacity, mute, physics strength, render resolution, character prompt, body-band boundaries, action cadence — every character remembers its own values, with a "restore defaults" button.
 - **Corner dwelling**: window sits at the screen corner by default, transparent, frameless, always-on-top, no Dock icon.
 - **Pixel-perfect click-through**: only the character's real pixels are clickable; transparent areas pass clicks straight through to the desktop (alpha-channel detection from a preserved drawing buffer).
@@ -30,6 +30,8 @@ A Live2D desktop pet that lives on your macOS screen, built with **Electron + PI
 - **Game saver (v2.1.1)**: when a game is running in the foreground in a **window**, the pet automatically lowers itself to 23 FPS and 1× resolution to free up resources for the game, and restores your original FPS / sharpness the moment you quit. (Full-screen games are already covered by the auto-hide option.)
 - **Smarter chat bubble (v2.1.1)**: the speech bubble no longer covers the character's head — it shows directly above the head by default, and automatically moves to the left / right side of the head whenever the screen edge (menu bar) would occlude it.
 - **Refreshed Furina persona (v2.1.1)**: following the Fontaine storyline, Furina is now portrayed as the ex-archon — a warm, drama-loving, lightly teasing best friend to the Traveler (no more lofty "elegant/tsundere goddess" air). The default render FPS is also tuned down to 23 for lower power use.
+- **Settings language switch (v2.1.0)**: the Settings panel supports Chinese / English and defaults to English; your choice is remembered across launches.
+- **Personas synced to the latest story (v2.1.2)**: every enabled character (Furina, Yae Miko, Nahida, Ganyu) now carries a complete, up-to-date memory of their full journey — from origin to the latest canon events — plus a shared **Teyvat world-state context**, so they remember everything they've done and "live in the present" of the story. Defaults are now 23 FPS / 1× sharpness for lower power use, and Lauma is currently greyed out.
 - **Login auto-start**: launches at login (toggle in the tray menu).
 
 ### Tech Stack
@@ -47,7 +49,7 @@ A Live2D desktop pet that lives on your macOS screen, built with **Electron + PI
 
 ### Install (macOS Apple Silicon)
 
-Download **fpet-2.1.1-arm64.dmg** from the [Releases](https://github.com/AnastasyaLiao/fpet-furina-mac-desktop-pet/releases) page, open it and drag **fpet** into your Applications folder.
+Download **fpet-2.1.2-arm64.dmg** from the [Releases](https://github.com/AnastasyaLiao/fpet-furina-mac-desktop-pet/releases) page, open it and drag **fpet** into your Applications folder.
 
 ### Usage
 
@@ -113,7 +115,7 @@ npm start        # launch the pet
 
 ```bash
 npm install
-npm run dist     # → dist/fpet-2.1.1-arm64.dmg
+npm run dist     # → dist/fpet-2.1.2-arm64.dmg
 ```
 
 ### License
@@ -127,7 +129,7 @@ npm run dist     # → dist/fpet-2.1.1-arm64.dmg
 
 ### 功能特性
 
-- **多角色支持**：芙宁娜、八重神子、纳西妲、甘雨、菈乌玛已完整启用；胡桃、芭芭拉、奈芙尔、丝柯克已放入 `models/`（设置面板灰显，等待人设/布局调校后启用）。
+- **多角色支持**：芙宁娜、八重神子、纳西妲、甘雨已完整启用；胡桃、芭芭拉、奈芙尔、丝柯克、菈乌玛已放入 `models/`（设置面板灰显，等待人设/布局调校后启用）。
 - **每角色独立设置**：缩放、位置、透明度、静音、物理强度、渲染清晰度、人设 Prompt、部位分界比例、动作节奏——每个角色都记住自己的一套配置，并带「恢复默认」按钮。
 - **角落常驻**：默认贴齐屏幕角落，透明、无边框、置顶、不占 Dock。
 - **像素级点击穿透**：只有角色「真实像素」可点击，透明区域直接穿透到桌面（基于 preserveDrawingBuffer 的 alpha 通道检测）。
@@ -147,6 +149,8 @@ npm run dist     # → dist/fpet-2.1.1-arm64.dmg
 - **游戏节能（v2.1.1）**：检测到前台正在**窗口化**打游戏时，桌宠自动降到 23fps、分辨率降到 1×，给游戏让出更多资源；退出游戏立即恢复你原本的帧率 / 清晰度。（全屏游戏自动隐藏已覆盖。）
 - **更聪明的聊天气泡（v2.1.1）**：修复聊天框遮挡角色头部——气泡默认显示在头顶正上方；当屏幕上沿 / 菜单栏会夹住气泡时，会自动移到头部左侧或右侧。
 - **芙宁娜人设重构（v2.1.1）**：贴合枫丹主线——芙宁娜塑造为「已卸下神位的枫丹少女、旅行者的知己挚友」：热情俏皮、爱开玩笑、会讨“出场费”、幽默自嘲，也藏有五百年来孤独与伤疤的敏感脆弱，绝不摆架子、绝不高高在上；同时默认渲染帧率调整为 23fps，更省电。
+- **设置面板中英文切换（v2.1.0）**：设置面板支持中文 / 英文，默认英文，选择自动记住、重启保持。
+- **角色人设对齐最新剧情（v2.1.2）**：芙宁娜、八重神子、纳西妲、甘雨均更新为《原神》当前真实剧情推进后的最新性格，并为每个角色注入完整「过往记忆清单」（从最初至今的全部关键经历，确保任何事都不会被忘记），同时新增**提瓦特世界观与发展趋势**设定，让角色真实地活在“当下”的提瓦特世界里作答。默认以 23fps / 1× 清晰度运行更省电；菈乌玛暂灰显禁用。
 - **开机自启**：登录时自动启动（可在托盘菜单开关）。
 
 ### 技术栈
@@ -164,7 +168,7 @@ npm run dist     # → dist/fpet-2.1.1-arm64.dmg
 
 ### 安装（macOS Apple Silicon）
 
-从 [Releases](https://github.com/AnastasyaLiao/fpet-furina-mac-desktop-pet/releases) 页面下载 **fpet-2.1.1-arm64.dmg**，打开后把 **fpet** 拖入「应用程序」即可。
+从 [Releases](https://github.com/AnastasyaLiao/fpet-furina-mac-desktop-pet/releases) 页面下载 **fpet-2.1.2-arm64.dmg**，打开后把 **fpet** 拖入「应用程序」即可。
 
 ### 常用交互
 
@@ -230,13 +234,27 @@ npm start        # 启动桌宠
 
 ```bash
 npm install
-npm run dist     # → dist/fpet-2.1.1-arm64.dmg
+npm run dist     # → dist/fpet-2.1.2-arm64.dmg
 ```
 
 ### 许可说明
 
 - **代码**：MIT License（见 LICENSE）。仅供学习交流，请勿商用。
 - **模型**：版权归 miHoYo / 画师 / 建模师所有；禁止商用、禁止盗卖、禁止二次配布（见上文[模型来源与版权](#模型来源与版权)）。
+
+---
+
+## v2.1.2 Release Notes
+
+- **角色人设全面对齐最新剧情**：根据《原神》当前真实剧情推进，重构了全部已启用角色（芙宁娜、八重神子、纳西妲、甘雨）的性格，使其符合各自剧情线推进到**最新**的官方性格：
+  - **芙宁娜**：卸任水神后的枫丹少女、旅行者的知己挚友（v2.1.1 已初步重构，本次补充完整生涯记忆）。
+  - **八重神子**：补充「白辰血脉 → 坎瑞亚之变 → 接任宫司 → 眼狩令 → 助旅行者救回雷电影 → 稻妻重归繁荣」的完整记忆。
+  - **纳西妲**：补充「被囚五百年 → 被旅行者解救 → 抹去大慈树王 → 阳谋收服散兵 → 净化草龙阿佩普 → 最新须弥危机（世界树地脉堵塞、生命力枯竭、寻阿佩普与利露帕尔、富人博士算计）」的完整记忆。
+  - **甘雨**：补充「麒麟混血 → 魔神战争 → 月海亭三千年 → 帝君退位 → 被劝回 → 传说道破仙凡隔阂 → 后岩神时代璃月支柱」的完整记忆。
+- **完整「过往记忆清单」**：为每位角色注入从出生到当下的全部关键经历，确保模型不会忘记角色曾经历过的任何剧情与事件。
+- **新增提瓦特世界观与发展趋势**：为全部角色注入当前提瓦特世界的发展走向（七国格局、旅行者寻亲、深渊与天理对峙、愚人众与神之心、旧神退场、各国自立、终局临近），让角色活在"当下"作答。
+- **默认功耗优化**：默认以 23fps、1× 清晰度运行，更省电。
+- **菈乌玛暂时禁用**：设置面板中灰显禁用，待人设 / 布局调校后再开放。
 
 ---
 

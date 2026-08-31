@@ -1,6 +1,6 @@
 {
   "name": "fpet",
-  "version": "2.1.1",
+  "version": "2.1.2",
   "description": "fpet —— 芙宁娜桌面宠物（透明、无边框、常驻屏幕右下角），支持接入自己的 DeepSeek / Ollama 大模型，可开启屏幕感知读取当前画面",
   "main": "electron/main.js",
   "author": "AnastasyaLiao",
