@@ -35,6 +35,8 @@ A Live2D desktop pet that lives on your macOS / Windows screen, built with **Ele
 - **Native settings window (v2.2.0)**: Settings now opens in a real desktop window (Electron BrowserWindow) instead of a browser tab — with a macOS traffic-light title bar (red/yellow/green), automatic **dark / light theme** that follows your system, and a **Liquid-Glass** translucent UI. The **Save button is always pinned to the title bar**, so you can save from anywhere without scrolling to the bottom. Also fixes the default welcome page that used to pop up on every launch.
 - **Login auto-start**: launches at login (toggle in the tray menu).
 - **Cross-platform (v3.0.0)**: now also runs on **Windows** with feature parity to macOS — the very same characters, memory, LLM, chat, screen awareness, game saver and tray. Platform branches are added to the shared main process, so the macOS build is left untouched.
+- **Adaptive chat bubble (v3.0.1)**: the speech bubble stretches wider for longer replies (up to 440 px) instead of wrapping into a tall narrow column; when the character sits on the right half of the screen (e.g. bottom-right corner), the bubble shifts left to use the free space; and the bubble now stays much longer — its hide delay scales with the reply length (up to ~20 s), so long messages no longer vanish too quickly.
+- **Meme-ready personas (v3.0.1 pre)**: a shared miHoYo meme library is added to the global framework, so every character can naturally fire back Genshin / miHoYo memes — from the iconic "原神，启动！", "欸嘿" and "蒸馍你不服气" to "爱上雷神" and "胸口碎大石" — making chats feel like talking to a real in-game companion, identically on macOS and Windows.
 
 ### Tech Stack
 
@@ -53,8 +55,8 @@ A Live2D desktop pet that lives on your macOS / Windows screen, built with **Ele
 
 Download from the [Releases](https://github.com/AnastasyaLiao/fpet-furina-mac-desktop-pet/releases) page.
 
-- **macOS (Apple Silicon)**: **fpet-3.0.0-arm64.dmg** — open it and drag **fpet** into your Applications folder.
-- **Windows (x64)**: **fpet-3.0.0-win-x64.exe** — run it and follow the installer.
+- **macOS (Apple Silicon)**: **fpet-3.0.1-arm64.dmg** — open it and drag **fpet** into your Applications folder.
+- **Windows (x64)**: **fpet-3.0.1-win-x64.exe** — run it and follow the installer.
 
 ### Usage
 
@@ -120,8 +122,8 @@ npm start        # launch the pet
 
 ```bash
 npm install
-npm run dist       # → dist/fpet-3.0.0-arm64.dmg (macOS)
-npm run dist:win   # → dist/fpet-3.0.0-win-x64.exe (Windows)
+npm run dist       # → dist/fpet-3.0.1-arm64.dmg (macOS)
+npm run dist:win   # → dist/fpet-3.0.1-win-x64.exe (Windows)
 ```
 
 ### License
@@ -160,6 +162,7 @@ npm run dist:win   # → dist/fpet-3.0.0-win-x64.exe (Windows)
 - **原生设置窗口（v2.2.0）**：设置面板从「浏览器网页」改为**原生图形化桌面窗口**——macOS 左上角红 / 黄 / 绿交通灯标题栏、自动跟随系统**深色 / 浅色主题**、全新**液态玻璃**半透明 UI；**保存按钮常驻标题栏置顶**，任何位置都能一键保存，无需滑到页面底部。同时修复了每次启动弹出默认欢迎页的问题。
 - **开机自启**：登录时自动启动（可在托盘菜单开关）。
 - **跨平台（v3.0.0）**：除 macOS 外，新增 **Windows** 版本，功能与 macOS 几乎完全一致——同一套角色、记忆、接入大模型、对话、屏幕感知、游戏节能与托盘；主进程按平台分支实施，macOS 构建不受影响。
+- **原神 / 米哈游梗语库（v3.0.1 pre）**：在全局框架中新增共享「米哈游梗语库·玩梗指南」，所有角色都能自然接住原神与米哈游系游戏的梗——从「原神，启动！」「欸嘿」「蒸馍你不服气」到「爱上雷神」「胸口碎大石」，让对话像和游戏里的伙伴聊天一样；macOS 与 Windows 双平台一致生效。
 
 ### 技术栈
 
@@ -178,8 +181,8 @@ npm run dist:win   # → dist/fpet-3.0.0-win-x64.exe (Windows)
 
 从 [Releases](https://github.com/AnastasyaLiao/fpet-furina-mac-desktop-pet/releases) 页面下载安装包。
 
-- **macOS（Apple Silicon）**：**fpet-3.0.0-arm64.dmg**，打开后把 **fpet** 拖入「应用程序」即可。
-- **Windows（x64）**：**fpet-3.0.0-win-x64.exe**，运行后按向导安装。
+- **macOS（Apple Silicon）**：**fpet-3.0.1-pre-arm64.dmg**，打开后把 **fpet** 拖入「应用程序」即可。
+- **Windows（x64）**：**fpet-3.0.1-pre-win-x64.exe**，运行后按向导安装。
 
 ### 常用交互
 
@@ -245,14 +248,26 @@ npm start        # 启动桌宠
 
 ```bash
 npm install
-npm run dist       # → dist/fpet-3.0.0-arm64.dmg（macOS）
-npm run dist:win   # → dist/fpet-3.0.0-win-x64.exe（Windows）
+npm run dist       # → dist/fpet-3.0.1-pre-arm64.dmg（macOS）
+npm run dist:win   # → dist/fpet-3.0.1-pre-win-x64.exe（Windows）
 ```
 
 ### 许可说明
 
 - **代码**：MIT License（见 LICENSE）。仅供学习交流，请勿商用。
 - **模型**：版权归 miHoYo / 画师 / 建模师所有；禁止商用、禁止盗卖、禁止二次配布（见上文[模型来源与版权](#模型来源与版权)）。
+
+---
+
+## v3.0.1 pre Release Notes
+
+- **原神 / 米哈游梗语库（全新）**：在全局框架中新增共享「米哈游梗语库·玩梗指南」，所有角色（芙宁娜、八重神子、纳西妲、甘雨）都能自然地接住原神与米哈游系游戏的梗，并遵守「自然适度、顺势接梗、不懂不装懂」的玩梗原则：
+  - **出圈名梗**：原神，启动！/ 玩原神玩的 / 前面的区域，以后再来探索吧 / 欸嘿（欸嘿是什么意思啊！）/ 异世相逢，尽享美味 / 原来你也玩原神 / 向着星辰与深渊！/ 我曾三度遭到背叛 / 蒸馍你不服气 / 哒哒哒哒哒 / 这就是短生种的悲哀 / 爱上雷神（星铁《耀斑》空耳）。
+  - **角色经典台词梗**：天动万象（钟离）/ 牛杂师傅（刻晴）/ 这个仇我记下了（优菈）/ 无聊。无用。无能。（魈）/ 芭芭拉冲呀 / 无想的一刀（雷电将军）/ 全都可以炸完（可莉）/ 吃饱喝饱，一路走好（胡桃）等。
+  - **玩家社区梗**：应急食品派蒙 / 凝冰渡海真君（凯亚）/ 迫害提米鸽子 / 很会聊天真君（闲云）/ 影宝不会做饭 / 钟离穷光蛋 / 抽卡黑话（保底、歪了、大保底、吃满定轨、娶老婆）等。
+  - **米哈游其他游戏梗**：星穹铁道（愿此行终抵群星 / 帮帮我OO先生 / 胸口碎大石 / 会赢的）、崩坏3（最后一课 / 我什么都做不到）、绝区零（绳匠 / 狡兔屋 / 邦布 / 空洞 / 丁尼）。
+- **聊天体验优化（双平台一致）**：修复聊天气泡长文无法滚动的问题（超长回答可滚动、并自动滚到底保持最新内容可见）；气泡宽度随内容自适应拉伸（短文窄、长文左右展开）；隐藏芙宁娜头部背后的「荒性 / 芒性特效光」；触摸冷却优化为任意部位 1 秒内只触发一次 AI，节省 token 与并发。
+- **版本号**：v3.0.1 pre（预发布）。
 
 ---
 
