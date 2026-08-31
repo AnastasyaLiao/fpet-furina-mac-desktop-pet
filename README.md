@@ -36,7 +36,10 @@ A Live2D desktop pet that lives on your macOS / Windows screen, built with **Ele
 - **Login auto-start**: launches at login (toggle in the tray menu).
 - **Cross-platform (v3.0.0)**: now also runs on **Windows** with feature parity to macOS — the very same characters, memory, LLM, chat, screen awareness, game saver and tray. Platform branches are added to the shared main process, so the macOS build is left untouched.
 - **Adaptive chat bubble (v3.0.1)**: the speech bubble stretches wider for longer replies (up to 440 px) instead of wrapping into a tall narrow column; when the character sits on the right half of the screen (e.g. bottom-right corner), the bubble shifts left to use the free space; and the bubble now stays much longer — its hide delay scales with the reply length (up to ~20 s), so long messages no longer vanish too quickly.
-- **Meme-ready personas (v3.0.1 pre)**: a shared miHoYo meme library is added to the global framework, so every character can naturally fire back Genshin / miHoYo memes — from the iconic "原神，启动！", "欸嘿" and "蒸馍你不服气" to "爱上雷神" and "胸口碎大石" — making chats feel like talking to a real in-game companion, identically on macOS and Windows.
+- **Strict anti-OOC / anti-hallucination persona framework (v3.0.1-pre)**: every enabled Genshin character now runs under a shared 6-rule **UNIVERSAL_HARD_RULES** guardrail and a per-character **knowledge boundary**. A new **full-profile first-load mechanism** injects a ~5000–6000 character complete official dossier (canon backstory, character stories 1–5, weapon/vision/constellation hard values, relationship chart, story beats, and canned trap-question dodges) only once per character, then flips a cached flag and switches to a lightweight compact framework for every subsequent call — so extra token cost is only paid the very first time you pick a character. Fully identical on **macOS and Windows**.
+  - **6 shared guardrails**: no hallucinating non-canon moves/visions/weapons/constellations; never joke about major tragedy story arcs (Sinner's Solo Waltz / Thousand-Armed Hundred-Eyed / Samsara / Sal Terrae massacre / Poisson sinking etc.); keep replies short; sound like yourself; no OOC; equal Traveler relationship (no master/retinue wording).
+  - **Hard anti-hallucination points per character**: Furina (no Vision for 500 years — only obtains one at the end of her second Story Quest; sword user, not catalyst); Yae Miko (5-tailed Celestial Fox of the Hakushin lineage, **not** a nine-tailed kitsune; no Electro Gnosis after trading it with the Dottore); Nahida (born from Rukkhadevata's pure Irminsul branch — **not** a reincarnation; personally erased Rukkhadevata so the world no longer remembers her); Ganyu (Ice bow user, **not** catalyst or polearm; Qixing general secretary — **not** one of the Seven Qixing herself; constant drowsiness is a half-Qilin physical trait, not "slacking off").
+  - **Knowledge boundary per character**: each character only knows what they personally lived through + their own nation's public info + what the Traveler shared with them. Secret details of other nations, future version story, Abyss interiors, Celestia specifics, etc. all get an honest "I don't really know that" reply in the character's own voice — no more made-up nation lore out of thin air.
 
 ### Tech Stack
 
@@ -55,8 +58,8 @@ A Live2D desktop pet that lives on your macOS / Windows screen, built with **Ele
 
 Download from the [Releases](https://github.com/AnastasyaLiao/fpet-furina-mac-desktop-pet/releases) page.
 
-- **macOS (Apple Silicon)**: **fpet-3.0.1-arm64.dmg** — open it and drag **fpet** into your Applications folder.
-- **Windows (x64)**: **fpet-3.0.1-win-x64.exe** — run it and follow the installer.
+- **macOS (Apple Silicon)**: **fpet-3.0.1-pre-arm64.dmg** — open it and drag **fpet** into your Applications folder.
+- **Windows (x64)**: **fpet-3.0.1-pre-win-x64.exe** — run it and follow the installer.
 
 ### Usage
 
@@ -122,8 +125,8 @@ npm start        # launch the pet
 
 ```bash
 npm install
-npm run dist       # → dist/fpet-3.0.1-arm64.dmg (macOS)
-npm run dist:win   # → dist/fpet-3.0.1-win-x64.exe (Windows)
+npm run dist       # → dist/fpet-3.0.1-pre-arm64.dmg (macOS)
+npm run dist:win   # → dist/fpet-3.0.1-pre-win-x64.exe (Windows)
 ```
 
 ### License
@@ -162,7 +165,11 @@ npm run dist:win   # → dist/fpet-3.0.1-win-x64.exe (Windows)
 - **原生设置窗口（v2.2.0）**：设置面板从「浏览器网页」改为**原生图形化桌面窗口**——macOS 左上角红 / 黄 / 绿交通灯标题栏、自动跟随系统**深色 / 浅色主题**、全新**液态玻璃**半透明 UI；**保存按钮常驻标题栏置顶**，任何位置都能一键保存，无需滑到页面底部。同时修复了每次启动弹出默认欢迎页的问题。
 - **开机自启**：登录时自动启动（可在托盘菜单开关）。
 - **跨平台（v3.0.0）**：除 macOS 外，新增 **Windows** 版本，功能与 macOS 几乎完全一致——同一套角色、记忆、接入大模型、对话、屏幕感知、游戏节能与托盘；主进程按平台分支实施，macOS 构建不受影响。
-- **原神 / 米哈游梗语库（v3.0.1 pre）**：在全局框架中新增共享「米哈游梗语库·玩梗指南」，所有角色都能自然接住原神与米哈游系游戏的梗——从「原神，启动！」「欸嘿」「蒸馍你不服气」到「爱上雷神」「胸口碎大石」，让对话像和游戏里的伙伴聊天一样；macOS 与 Windows 双平台一致生效。
+- **更聪明的输出框（v3.0.1）**：回复内容越多，气泡越宽（最长 440px，短文保持窄小），不再挤成又高又窄的一列；当角色停留在屏幕右半区（如右下角）时，气泡自动向左平移展开，充分利用左侧空间；气泡停留时间与内容长度成正比（最长约 20 秒），长回复不会一闪而过。
+- **原神人设防乱编 / 防 OOC 框架（v3.0.1-pre，双平台一致）**：所有启用角色统一运行一套 **通用 6 条强制规则（UNIVERSAL_HARD_RULES）** 监督，并为每个角色划定独立的**知识范围硬边界**。新增的**「首加载完整版人设」机制**会在你第一次选中某个角色时，**一次性**注入约 5000~6000 字的官方档案全文（从背景故事、角色故事 1~5、神之眼/武器/命座硬值、人物关系网、关键剧情节点，到常见陷阱问题的回避模板）；写完持久化标志位后，后续全部走精简版框架——额外的 token 成本只在第一次产生，之后不再有。macOS 与 Windows 完全一致：
+  - **通用 6 条强制规则**：① 绝不乱编非官方招式、神之眼、武器、命座、人物关系、魔神名、历史；② 绝不调侃悲剧主线（罪人舞步旋 / 千手百眼 / 虚空鼓动 / 盐神灭族 / 白淞镇沉没等一律禁止当才艺）；③ 回复必须简短（日常 ≤20 字）；④ 说话必须像角色本人（禁万能温柔模板）；⑤ 禁猎奇 OOC；⑥ 身份平等（一律称旅行者，禁主仆口吻）。
+  - **各角色防乱编硬点**：芙宁娜（500 年没有合法神之眼，直到传说任务 2 才拿到；单手剑不是法器；绝对答不出"海渡玛 / 休养生息 / 审判之舞"这类架空词）；八重神子（白辰血脉·五尾天狐，**不是九尾**；雷神之心早已与博士交换，不在身上）；纳西妲（大慈树王纯净枝杈所化，**不是转世**；亲手把大慈树王从世界树上抹除，世人已不记得）；甘雨（冰元素弓，**不是法器/长枪**；是七星**全体秘书**，自己不是七星；嗜睡是半麒麟生理，不是"摸鱼"）。
+  - **每角色知识范围硬边界**：只回答自己亲身经历过的剧情、自己国家的公开信息、以及旅行者和自己分享过的事。他国高层秘辛、未来版本剧情、深渊内部、天空岛真相……一律用各自角色的语气坦诚说"不清楚"——再也不会凭空编造别国的历史或人物。
 
 ### 技术栈
 
@@ -266,7 +273,7 @@ npm run dist:win   # → dist/fpet-3.0.1-pre-win-x64.exe（Windows）
   - **角色经典台词梗**：天动万象（钟离）/ 牛杂师傅（刻晴）/ 这个仇我记下了（优菈）/ 无聊。无用。无能。（魈）/ 芭芭拉冲呀 / 无想的一刀（雷电将军）/ 全都可以炸完（可莉）/ 吃饱喝饱，一路走好（胡桃）等。
   - **玩家社区梗**：应急食品派蒙 / 凝冰渡海真君（凯亚）/ 迫害提米鸽子 / 很会聊天真君（闲云）/ 影宝不会做饭 / 钟离穷光蛋 / 抽卡黑话（保底、歪了、大保底、吃满定轨、娶老婆）等。
   - **米哈游其他游戏梗**：星穹铁道（愿此行终抵群星 / 帮帮我OO先生 / 胸口碎大石 / 会赢的）、崩坏3（最后一课 / 我什么都做不到）、绝区零（绳匠 / 狡兔屋 / 邦布 / 空洞 / 丁尼）。
-- **聊天体验优化（双平台一致）**：修复聊天气泡长文无法滚动的问题（超长回答可滚动、并自动滚到底保持最新内容可见）；气泡宽度随内容自适应拉伸（短文窄、长文左右展开）；隐藏芙宁娜头部背后的「荒性 / 芒性特效光」；触摸冷却优化为任意部位 1 秒内只触发一次 AI，节省 token 与并发。
+- **聊天体验优化（双平台一致）**：修复聊天气泡长文无法滚动的问题（超长回答可滚动、并自动滚到底保持最新内容可见）；气泡宽度随内容自适应拉伸（短文窄、长文左右展开，最长 440px）；角色停留在屏幕右半区（如右下角）时，气泡自动向左平移展开、充分利用左侧空间；气泡消失时间与输出内容长度成正比（最长约 20 秒），长回复不会一闪而过；隐藏芙宁娜头部背后的「荒性 / 芒性特效光」；触摸冷却优化为任意部位 1 秒内只触发一次 AI，节省 token 与并发。
 - **版本号**：v3.0.1 pre（预发布）。
 
 ---
