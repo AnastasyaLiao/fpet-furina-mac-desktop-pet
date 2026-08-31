@@ -3,14 +3,24 @@
 dist/
 out/
 release/
+*.dmg
 
 # 依赖
 node_modules/
+electron/node_modules/
+electron/package-lock.json
 
 # 运行时生成/用户数据
 chat_history.json
 config.json
+memory.json
+logs/
 *.log
+
+# 本机辅助脚本 / 测试
+同步到Applications版.command
+test-round2.js
+test-search.js
 
 # 系统/IDE 文件
 .DS_Store

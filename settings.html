@@ -4,346 +4,712 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>桌面宠物 · 设置</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --ink: #3a352f;
+            --ink: #2e2a24;
             --muted: #8a8378;
+            --muted-light: #b0a99e;
             --line: #e6e0d5;
+            --line-soft: #f0ebe1;
             --accent: #4f8f8f;
             --accent-dark: #3a6f6f;
+            --accent-soft: rgba(79, 143, 143, 0.12);
             --card: #fffdf8;
+            --card-elevated: #ffffff;
+            --warm: #d4a574;
+            --warm-dark: #b8865a;
+            --danger: #b05252;
+            --success: #5a8a5a;
         }
-        * { box-sizing: border-box; }
-        html, body {
-            margin: 0;
-            padding: 0;
-            min-height: 100%;
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        html { scroll-behavior: smooth; }
+        body {
+            min-height: 100vh;
             font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
             color: var(--ink);
-        }
-        /* 柔和暖色渐变背景 + 细微噪点纹理（避免纯色平铺） */
-        body {
+            line-height: 1.6;
             background:
-                radial-gradient(1200px 600px at 85% -10%, #f2e8d8 0%, transparent 60%),
-                radial-gradient(900px 500px at -10% 110%, #ddeaea 0%, transparent 55%),
-                linear-gradient(160deg, #f7f2e8 0%, #eef0ea 55%, #e7ecea 100%);
+                radial-gradient(1400px 700px at 85% -8%, #f4e9d4 0%, transparent 58%),
+                radial-gradient(1000px 600px at -8% 108%, #dde9e9 0%, transparent 52%),
+                linear-gradient(165deg, #f8f3e9 0%, #efece4 50%, #e8ece8 100%);
         }
         body::before {
             content: "";
             position: fixed;
             inset: 0;
             pointer-events: none;
-            opacity: 0.35;
+            opacity: 0.3;
+            z-index: 0;
             background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120' viewBox='0 0 120 120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3CfeComponentTransfer%3E%3CfeFuncA type='linear' slope='0.05'/%3E%3C/feComponentTransfer%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23n)'/%3E%3C/svg%3E");
         }
+
+        /* ===== 布局 ===== */
         main {
             position: relative;
-            max-width: 920px;
+            z-index: 1;
+            max-width: 1080px;
             margin: 0 auto;
-            padding: 56px 28px;
+            padding: 48px 24px 160px;
             display: grid;
-            grid-template-columns: 1.1fr 0.9fr;
-            gap: 48px;
+            grid-template-columns: 220px 1fr;
+            gap: 36px;
             align-items: start;
         }
-        .intro h1 {
-            font-size: 26px;
-            font-weight: 700;
-            letter-spacing: 0.5px;
-            margin: 0 0 14px;
+
+        /* ===== 左侧导航 ===== */
+        .sidebar {
+            position: sticky;
+            top: 48px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
         }
-        .intro .badge {
+        .sidebar h1 {
+            font-family: "Noto Serif SC", serif;
+            font-size: 22px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            line-height: 1.3;
+            color: var(--ink);
+        }
+        .sidebar .badge {
             display: inline-flex;
             align-items: center;
-            gap: 7px;
-            font-size: 12px;
-            color: var(--accent-dark);
-            background: rgba(79, 143, 143, 0.12);
-            border: 1px solid rgba(79, 143, 143, 0.25);
-            padding: 4px 10px;
+            gap: 6px;
+            font-size: 11px;
+            color: var(--warm-dark);
+            background: rgba(212, 165, 116, 0.15);
+            border: 1px solid rgba(212, 165, 116, 0.3);
+            padding: 3px 10px;
             border-radius: 999px;
-            margin-bottom: 18px;
+            width: fit-content;
         }
-        .intro p {
-            font-size: 14px;
-            line-height: 1.8;
-            color: var(--muted);
-            margin: 0 0 12px;
+        .sidebar nav {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            border-left: 2px solid var(--line);
+            padding-left: 0;
         }
-        .intro ul {
-            margin: 8px 0 0;
-            padding-left: 18px;
-            color: var(--muted);
+        .sidebar nav a {
             font-size: 13px;
-            line-height: 2;
+            color: var(--muted);
+            text-decoration: none;
+            padding: 8px 0 8px 16px;
+            border-left: 2px solid transparent;
+            margin-left: -2px;
+            transition: all 0.2s cubic-bezier(0.22, 1, 0.36, 1);
         }
-        .panel {
+        .sidebar nav a:hover {
+            color: var(--accent-dark);
+            border-left-color: var(--accent);
+            background: var(--accent-soft);
+        }
+        .sidebar nav a.active {
+            color: var(--accent-dark);
+            border-left-color: var(--accent);
+            font-weight: 600;
+        }
+        .sidebar .version-info {
+            font-size: 11px;
+            color: var(--muted-light);
+            line-height: 1.7;
+            border-top: 1px dashed var(--line);
+            padding-top: 12px;
+        }
+
+        /* ===== 右侧表单区 ===== */
+        .form-area {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        /* ===== 卡片 ===== */
+        .card {
             background: var(--card);
             border: 1px solid var(--line);
-            border-radius: 16px;
-            padding: 26px 26px 22px;
-            box-shadow: 0 12px 32px -18px rgba(60, 54, 45, 0.35);
+            border-radius: 14px;
+            padding: 24px 28px;
+            box-shadow: 0 8px 28px -16px rgba(60, 54, 45, 0.25);
+            animation: fadeUp 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
         }
-        .field { margin-bottom: 18px; }
+        .card:nth-child(1) { animation-delay: 0.05s; }
+        .card:nth-child(2) { animation-delay: 0.1s; }
+        .card:nth-child(3) { animation-delay: 0.15s; }
+        .card:nth-child(4) { animation-delay: 0.2s; }
+        .card:nth-child(5) { animation-delay: 0.25s; }
+        .card:nth-child(6) { animation-delay: 0.3s; }
+        .card:nth-child(7) { animation-delay: 0.35s; }
+        .card:nth-child(8) { animation-delay: 0.4s; }
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(12px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .card-title {
+            font-family: "Noto Serif SC", serif;
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--ink);
+            margin-bottom: 4px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .card-title .icon {
+            width: 28px; height: 28px;
+            display: inline-flex; align-items: center; justify-content: center;
+            border-radius: 8px;
+            background: var(--accent-soft);
+            color: var(--accent-dark);
+            font-size: 14px;
+        }
+        .card-desc {
+            font-size: 12px;
+            color: var(--muted);
+            line-height: 1.7;
+            margin-bottom: 16px;
+        }
+
+        /* ===== 表单元素 ===== */
+        .field { margin-bottom: 16px; }
         .field label {
             display: block;
             font-size: 13px;
             font-weight: 600;
-            margin-bottom: 7px;
+            margin-bottom: 6px;
+            color: var(--ink);
         }
         .field .hint {
             font-size: 11px;
             color: var(--muted);
-            margin-top: 5px;
+            margin-top: 4px;
+            line-height: 1.5;
         }
-        .field input, .field select {
+        .field input[type="text"],
+        .field input[type="password"],
+        .field select,
+        .field textarea {
             width: 100%;
-            padding: 10px 12px;
-            font-size: 15px;
+            padding: 9px 12px;
+            font-size: 14px;
             border: 1px solid var(--line);
-            border-radius: 10px;
+            border-radius: 8px;
             background: #fbfaf6;
             color: var(--ink);
             outline: none;
-            transition: border-color 0.16s ease;
+            transition: border-color 0.18s, background 0.18s;
+            font-family: inherit;
         }
-        .field input:focus, .field select:focus {
+        .field input:focus, .field select:focus, .field textarea:focus {
             border-color: var(--accent);
             background: #fff;
         }
-        button.save {
+        .field textarea { min-height: 100px; resize: vertical; line-height: 1.6; }
+        .field input[type="range"] {
             width: 100%;
+            accent-color: var(--accent);
+            cursor: pointer;
+        }
+
+        /* ===== 开关行 ===== */
+        .switch-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
             padding: 12px 0;
-            font-size: 15px;
+            border-bottom: 1px solid var(--line-soft);
+        }
+        .switch-row:last-child { border-bottom: none; }
+        .switch-row .lbl { font-size: 14px; font-weight: 600; }
+        .switch-row .desc { font-size: 11px; color: var(--muted); margin-top: 3px; line-height: 1.5; }
+        .switch-row input[type="checkbox"] {
+            width: 42px; height: 22px;
+            appearance: none; -webkit-appearance: none;
+            background: #ddd; border-radius: 999px; position: relative;
+            cursor: pointer; transition: background 0.2s;
+            border: 1px solid var(--line);
+            flex-shrink: 0;
+        }
+        .switch-row input[type="checkbox"]::before {
+            content: ""; position: absolute; width: 16px; height: 16px;
+            border-radius: 50%; background: #fff;
+            top: 2px; left: 2px;
+            transition: transform 0.22s cubic-bezier(0.22, 1, 0.36, 1);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+        }
+        .switch-row input[type="checkbox"]:checked { background: var(--accent); border-color: var(--accent-dark); }
+        .switch-row input[type="checkbox"]:checked::before { transform: translateX(20px); }
+
+        /* ===== 按钮 ===== */
+        .btn {
+            padding: 10px 20px;
+            font-size: 14px;
             font-weight: 600;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: transform 0.15s, box-shadow 0.15s, background 0.15s;
+            font-family: inherit;
+        }
+        .btn-primary {
             color: #fff;
             background: linear-gradient(135deg, var(--accent) 0%, var(--accent-dark) 100%);
-            border: none;
-            border-radius: 12px;
-            cursor: pointer;
-            box-shadow: 0 10px 22px -12px rgba(58, 111, 111, 0.7);
-            transition: transform 0.16s ease, box-shadow 0.16s ease;
+            box-shadow: 0 8px 20px -10px rgba(58, 111, 111, 0.6);
         }
-        button.save:hover { transform: translateY(-1px); box-shadow: 0 14px 26px -12px rgba(58, 111, 111, 0.8); }
-        button.save:active { transform: translateY(0); }
-        button.save:disabled { opacity: 0.6; cursor: default; }
-        #testLLM, #saveLLM { flex: 1; }
-        .row { display: flex; gap: 10px; margin-top: 10px; }
-        button.save.secondary {
-            margin-top: 10px;
+        .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 12px 24px -10px rgba(58, 111, 111, 0.7); }
+        .btn-primary:active { transform: translateY(0); }
+        .btn-primary:disabled { opacity: 0.55; cursor: default; }
+        .btn-secondary {
             background: transparent;
             color: var(--accent-dark);
-            border: 1px solid rgba(79, 143, 143, 0.4);
-            box-shadow: none;
+            border: 1px solid rgba(79, 143, 143, 0.35);
         }
-        button.save.secondary:hover {
-            background: rgba(79, 143, 143, 0.08);
-            box-shadow: none;
-            transform: none;
+        .btn-secondary:hover { background: var(--accent-soft); }
+        .btn-ghost {
+            background: transparent;
+            color: var(--muted);
+            border: 1px solid var(--line);
+            font-size: 12px;
+            padding: 7px 14px;
         }
-        #status {
-            margin: 14px 0 0;
+        .btn-ghost:hover { color: var(--ink); border-color: var(--muted-light); }
+        .row { display: flex; gap: 10px; }
+        .actions-bar {
+            position: fixed;
+            left: 50%;
+            bottom: 20px;
+            transform: translateX(-50%);
+            width: calc(100% - 48px);
+            max-width: 1032px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            padding: 14px 20px;
+            background: rgba(255, 253, 248, 0.78);
+            backdrop-filter: blur(18px) saturate(1.4);
+            -webkit-backdrop-filter: blur(18px) saturate(1.4);
+            border: 1px solid rgba(230, 224, 213, 0.72);
+            border-radius: 16px;
+            box-shadow:
+                0 2px 6px -2px rgba(60, 54, 45, 0.08),
+                0 12px 36px -12px rgba(60, 54, 45, 0.22),
+                inset 0 1px 0 rgba(255, 255, 255, 0.6);
+            z-index: 100;
+            animation: barReveal 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+            animation-delay: 0.45s;
+        }
+        .actions-bar .bar-row {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+        @keyframes barReveal {
+            from { opacity: 0; transform: translateX(-50%) translateY(16px); }
+            to { opacity: 1; transform: translateX(-50%) translateY(0); }
+        }
+        .actions-bar .btn-primary { flex: 1; height: 42px; font-size: 14px; letter-spacing: 0.5px; }
+        .actions-bar .btn-secondary { flex-shrink: 0; height: 42px; }
+
+        /* ===== 状态文字 ===== */
+        #llmStatus {
             font-size: 13px;
             min-height: 18px;
+            margin-top: 10px;
         }
-        #status.ok { color: var(--accent-dark); }
-        #status.err { color: #b05252; }
-        /* ---------- 部位点击判定 分区 ---------- */
-        .divider {
-            margin: 26px 0 10px;
-            padding-top: 20px;
-            border-top: 1px dashed var(--line);
-            font-size: 14px;
-            font-weight: 700;
-            letter-spacing: 1px;
+        .bar-status {
+            font-size: 12px;
+            color: var(--muted);
+            min-height: 16px;
+            line-height: 1.4;
+            text-align: center;
+            transition: color 0.25s ease, opacity 0.3s ease;
         }
-        .hint.band {
-            background: rgba(79, 143, 143, 0.08);
+        .bar-status.ok { color: var(--success); }
+        .bar-status.err { color: var(--danger); }
+        #llmStatus.ok { color: var(--success); }
+        #llmStatus.err { color: var(--danger); }
+
+        /* ===== 信息条 ===== */
+        .info-band {
+            background: var(--accent-soft);
             border: 1px solid rgba(79, 143, 143, 0.2);
             border-radius: 10px;
-            padding: 9px 12px;
-            line-height: 1.6;
-            margin: 0 0 18px;
+            padding: 10px 14px;
+            line-height: 1.7;
+            font-size: 12px;
+            color: var(--muted);
+            margin-bottom: 16px;
         }
-        /* ---------- 聊天区（DeepSeek 对话） ---------- */
-        .chat {
-            margin-top: 22px;
-            padding-top: 18px;
-            border-top: 1px solid var(--line);
+        .info-band b { color: var(--accent-dark); }
+
+        /* ===== 记忆面板 ===== */
+        #memoryPanel {
+            margin-top: 12px;
+            padding: 16px 20px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, rgba(212, 165, 116, 0.06) 0%, rgba(79, 143, 143, 0.04) 100%);
+            border: 1px solid var(--line);
         }
-        .chat h2 {
+        #memoryPanel > div:first-child {
+            font-weight: 600;
             font-size: 14px;
-            margin: 0 0 4px;
+            margin-bottom: 10px;
+            color: var(--ink);
         }
-        .chat .row { display: flex; gap: 8px; margin-top: 10px; }
-        .chat input[type="text"] {
+        #memoryContent {
+            font-size: 13px;
+            line-height: 1.9;
+            color: var(--muted);
+        }
+        #memoryContent b { color: var(--ink); }
+
+        /* ===== 重置横幅 ===== */
+        #resetBanner {
+            margin-top: 14px;
+            padding: 14px 18px;
+            border-radius: 10px;
+            background: #fdecea;
+            border: 1px solid rgba(176, 82, 82, 0.2);
+            font-size: 13px;
+            color: var(--danger);
+        }
+        #resetBanner code {
+            font-family: "SF Mono", "Fira Code", monospace;
+            font-size: 12px;
+            background: rgba(176, 82, 82, 0.08);
+            padding: 1px 5px;
+            border-radius: 4px;
+        }
+
+        /* ===== 聊天区 ===== */
+        .chat-area {
+            margin-top: 16px;
+            padding-top: 16px;
+            border-top: 1px solid var(--line-soft);
+        }
+        .chat-area h3 {
+            font-size: 14px;
+            margin-bottom: 4px;
+        }
+        .chat-area .hint {
+            font-size: 11px;
+            color: var(--muted);
+            margin-bottom: 10px;
+        }
+        .chat-area input[type="text"] {
             flex: 1;
-            padding: 10px 12px;
+            padding: 9px 12px;
             font-size: 14px;
             border: 1px solid var(--line);
-            border-radius: 10px;
+            border-radius: 8px;
             background: #fbfaf6;
             color: var(--ink);
             outline: none;
-            transition: border-color 0.16s ease;
+            transition: border-color 0.18s;
+            font-family: inherit;
         }
-        .chat input[type="text"]:focus { border-color: var(--accent); background: #fff; }
-        .chat button.send {
-            padding: 10px 18px;
+        .chat-area input[type="text"]:focus { border-color: var(--accent); background: #fff; }
+        .chat-area .btn-send {
+            padding: 9px 18px;
             font-size: 14px;
             font-weight: 600;
             color: #fff;
             background: linear-gradient(135deg, var(--accent) 0%, var(--accent-dark) 100%);
             border: none;
-            border-radius: 10px;
+            border-radius: 8px;
             cursor: pointer;
-            transition: transform 0.16s ease;
+            transition: transform 0.15s;
+            flex-shrink: 0;
         }
-        .chat button.send:disabled { opacity: 0.6; cursor: default; }
-        .chat button.send:hover { transform: translateY(-1px); }
+        .chat-area .btn-send:disabled { opacity: 0.55; cursor: default; }
+        .chat-area .btn-send:hover { transform: translateY(-1px); }
         #chatlog {
             margin-top: 12px;
-            max-height: 220px;
+            max-height: 200px;
             overflow-y: auto;
             font-size: 13px;
-            line-height: 1.5;
+            line-height: 1.55;
         }
         #chatlog .msg {
             padding: 8px 12px;
             border-radius: 10px;
-            margin-bottom: 8px;
+            margin-bottom: 6px;
             white-space: pre-wrap;
             word-break: break-word;
         }
-        #chatlog .msg.user { background: rgba(79, 143, 143, 0.14); text-align: right; color: var(--accent-dark); }
+        #chatlog .msg.user { background: var(--accent-soft); text-align: right; color: var(--accent-dark); }
         #chatlog .msg.ai { background: #f3efe6; color: var(--ink); }
-        @media (max-width: 720px) {
-            main { grid-template-columns: 1fr; padding: 32px 20px; gap: 28px; }
+
+        /* ===== 响应式 ===== */
+        @media (max-width: 760px) {
+            main { grid-template-columns: 1fr; padding: 24px 16px 180px; gap: 20px; }
+            .sidebar { position: static; }
+            .sidebar nav { flex-direction: row; flex-wrap: wrap; border-left: none; border-bottom: 2px solid var(--line); padding-bottom: 8px; }
+            .sidebar nav a { border-left: none; padding: 4px 10px; }
+            .card { padding: 20px 18px; }
+            .actions-bar {
+                width: calc(100% - 32px);
+                bottom: 16px;
+                padding: 12px 16px;
+                border-radius: 14px;
+            }
+            .actions-bar .bar-row { gap: 10px; }
+            .actions-bar .btn-primary, .actions-bar .btn-secondary { height: 40px; font-size: 13px; }
         }
     </style>
 </head>
 <body>
     <main>
-        <section class="intro">
-            <h1>桌面宠物 · 设置</h1>
-            <span class="badge">
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                    <path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"/>
-                    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
-                </svg>
-                芙宁娜
-            </span>
-            <p>在这里调整桌宠的整体大小。拖动滑块即可整体等比例缩放，宽高始终同步变化，不会变形。</p>
-            <ul>
-                <li>100% 为默认大小，最小 30%、最大 150%</li>
-                <li>窗口会随模型大小自动调整，模型位置保持不变</li>
-                <li>保存后桌宠自动重新加载，立即生效</li>
-                <li>缩放的是整体：模型、气泡、输入框全部等比变化</li>
-                <li>「输出清晰度」可提升模型内部渲染分辨率，画面更锐利</li>
-            </ul>
-        </section>
+        <!-- 左侧导航 -->
+        <aside class="sidebar">
+            <h1>桌面宠物<br>设置面板</h1>
+            <span class="badge">v2.0 · 提瓦特</span>
+            <nav>
+                <a href="#sec-llm" class="active">AI 对话接入</a>
+                <a href="#sec-model">角色模型</a>
+                <a href="#sec-render">外观与渲染</a>
+                <a href="#sec-switch">开关与模式</a>
+                <a href="#sec-prompt">人设定制</a>
+                <a href="#sec-band">部位判定</a>
+                <a href="#sec-debug">记忆与调试</a>
+                <a href="#sec-chat">聊天测试</a>
+            </nav>
+            <div class="version-info">
+                版本 2.0.0<br>
+                作者 AnastasyaLiao<br>
+                Live2D Cubism SDK 6.0
+            </div>
+        </aside>
 
-        <section class="panel">
+        <!-- 右侧表单 -->
+        <div class="form-area">
             <form id="form">
-                <div class="divider">接入大模型 · AI 对话</div>
-                <div class="hint band">桌宠的对话由大模型驱动。请填入「你自己的」API 配置（不会内置任何密钥）。支持接入 DeepSeek 与 Ollama（本机本地大模型）；凡支持 OpenAI 兼容接口的服务也基本可接入。</div>
-                <div class="field">
-                    <label for="llmProvider">服务商 / 类型</label>
-                    <select id="llmProvider">
-                        <option value="deepseek">DeepSeek（云端 API）</option>
-                        <option value="ollama">Ollama（本地模型）</option>
-                    </select>
-                </div>
-                <div class="field" id="deepseekFields">
-                    <label for="apiKey">DeepSeek API Key</label>
-                    <input type="password" id="apiKey" placeholder="sk-…（提交后仅保存于本机 config.json）" autocomplete="off" />
-                    <div class="hint">在 DeepSeek 开放平台创建并记账充值后获取</div>
-                    <label for="baseUrl" style="margin-top:10px">接口地址（一般无需改）</label>
-                    <input type="text" id="baseUrl" placeholder="https://api.deepseek.com/v1" />
-                    <label for="model" style="margin-top:10px">模型名（一般无需改）</label>
-                    <input type="text" id="model" placeholder="deepseek-chat" />
-                </div>
-                <div class="field" id="ollamaFields" style="display:none">
-                    <label for="ollamaUrl">Ollama 服务地址</label>
-                    <input type="text" id="ollamaUrl" placeholder="http://127.0.0.1:11434" />
-                    <div class="hint">需先在本机运行 Ollama 并已拉取对应模型（命令：ollama pull 模型名）</div>
-                    <label for="ollamaModel" style="margin-top:10px">模型名</label>
-                    <input type="text" id="ollamaModel" placeholder="qwen2.5:7b" />
-                </div>
-                <div class="row">
-                    <button type="button" class="save" id="testLLM">测试连接</button>
-                    <button type="button" class="save" id="saveLLM">保存接入</button>
-                </div>
-                <p id="llmStatus" role="status"></p>
-                <div class="divider">外观与位置</div>
-                <div class="field">
-                    <label for="scale">整体缩放：<span id="scalev" style="font-weight:700">100</span>%</label>
-                    <input type="range" id="scale" min="30" max="150" step="1" value="100" />
-                    <div class="hint">拖动滑块整体等比例缩放桌宠，宽高同步变化、绝不变形（100% = 默认大小）</div>
-                </div>
-                <div class="field">
-                    <label for="px">窗口位置 X：<span id="pxv" style="font-weight:700">…</span> px</label>
-                    <input type="range" id="px" step="1" />
-                    <div class="hint">拖动滑块可实时移动桌宠（范围 = 当前屏幕工作区）</div>
-                </div>
-                <div class="field">
-                    <label for="py">窗口位置 Y：<span id="pyv" style="font-weight:700">…</span> px</label>
-                    <input type="range" id="py" step="1" />
-                    <div class="hint">拖动滑块可实时移动桌宠（范围 = 当前屏幕工作区）</div>
-                </div>
-                <div class="field">
-                    <label for="ps">物理强度：<span id="psv" style="font-weight:700">1.0</span> 倍</label>
-                    <input type="range" id="ps" min="0.1" max="5" step="0.1" value="1" />
-                    <div class="hint">数值越大，衣服/头发在待机时的物理飘动越明显</div>
-                </div>
-                <div class="field">
-                    <label for="rs">输出清晰度：<span id="rsv" style="font-weight:700">1.0</span>×</label>
-                    <input type="range" id="rs" min="1" max="2" step="0.1" value="1" />
-                    <div class="hint">数值越大，模型内部渲染分辨率越高、边缘越清晰，也更耗性能；1× 为默认（贴合屏幕），2× 最清晰</div>
-                </div>
-
-                <div class="divider">部位点击判定</div>
-                <div class="hint band">拖动下方分界线，可自定义点击模型不同部位（头 / 胸 / 腰 / 私处 / 腿 / 脚）的反馈范围。数值 = 分界点占模型画布高度的百分比，从上到下依次递增。</div>
-                <div class="field">
-                    <label for="bHead">头部分界：<span id="bHeadv" style="font-weight:700">25</span>%</label>
-                    <input type="range" id="bHead" min="0" max="40" step="1" value="25" />
-                    <div class="hint">0% ~ 此值 判为「头」（摸头反馈）</div>
-                </div>
-                <div class="field">
-                    <label for="bChest">胸部分界：<span id="bChestv" style="font-weight:700">34</span>%</label>
-                    <input type="range" id="bChest" min="5" max="55" step="1" value="34" />
-                    <div class="hint">头部分界 ~ 此值 判为「胸」</div>
-                </div>
-                <div class="field">
-                    <label for="bWaist">腰部分界：<span id="bWaistv" style="font-weight:700">45</span>%</label>
-                    <input type="range" id="bWaist" min="10" max="65" step="1" value="45" />
-                    <div class="hint">胸部分界 ~ 此值 判为「腰」</div>
-                </div>
-                <div class="field">
-                    <label for="bPriv">私处分界：<span id="bPrivv" style="font-weight:700">55</span>%</label>
-                    <input type="range" id="bPriv" min="20" max="75" step="1" value="55" />
-                    <div class="hint">腰部分界 ~ 此值 判为「私处」；若点私处被误判为腰，请把「腰部分界」调低、此值调高</div>
-                </div>
-                <div class="field">
-                    <label for="bFoot">脚部分界：<span id="bFootv" style="font-weight:700">60</span>%</label>
-                    <input type="range" id="bFoot" min="45" max="100" step="1" value="60" />
-                    <div class="hint">私处分界 ~ 此值 判为「腿」，此值 ~ 100% 判为「脚」</div>
-                </div>
-                <button type="submit" class="save" id="save">保存并生效</button>
-                <button type="button" class="save secondary" id="dock">贴回右下角</button>
-                <p id="status" role="status"></p>
-
-                <div class="chat">
-                    <h2>跟芙宁娜聊天</h2>
-                    <div class="hint">由你所接入的大模型驱动，回复会同步显示在桌宠的气泡里</div>
-                    <div class="row">
-                        <input type="text" id="chatInput" placeholder="想对芙宁娜说点什么…" maxlength="300" />
-                        <button type="button" class="send" id="chatSend">发送</button>
+                <!-- ===== AI 对话接入 ===== -->
+                <section class="card" id="sec-llm">
+                    <div class="card-title"><span class="icon">AI</span>接入大模型 · AI 对话</div>
+                    <div class="info-band">桌宠的对话由大模型驱动。请填入「你自己的」API 配置（不会内置任何密钥）。支持接入 DeepSeek 与 Ollama（本机本地大模型）；凡支持 OpenAI 兼容接口的服务也基本可接入。</div>
+                    <div class="field">
+                        <label for="llmProvider">服务商 / 类型</label>
+                        <select id="llmProvider">
+                            <option value="deepseek">DeepSeek（云端 API）</option>
+                            <option value="ollama">Ollama（本地模型）</option>
+                        </select>
                     </div>
-                    <div id="chatlog"></div>
+                    <div class="field" id="deepseekFields">
+                        <label for="apiKey">DeepSeek API Key</label>
+                        <input type="password" id="apiKey" placeholder="sk-…（提交后仅保存于本机 config.json）" autocomplete="off" />
+                        <div class="hint">在 DeepSeek 开放平台创建并记账充值后获取</div>
+                        <label for="baseUrl" style="margin-top:10px">接口地址（一般无需改）</label>
+                        <input type="text" id="baseUrl" placeholder="https://api.deepseek.com/v1" />
+                        <label for="model" style="margin-top:10px">模型名（一般无需改）</label>
+                        <input type="text" id="model" placeholder="deepseek-chat" />
+                    </div>
+                    <div class="field" id="ollamaFields" style="display:none">
+                        <label for="ollamaUrl">Ollama 服务地址</label>
+                        <input type="text" id="ollamaUrl" placeholder="http://127.0.0.1:11434" />
+                        <div class="hint">需先在本机运行 Ollama 并已拉取对应模型（命令：ollama pull 模型名）</div>
+                        <label for="ollamaModel" style="margin-top:10px">模型名</label>
+                        <input type="text" id="ollamaModel" placeholder="qwen2.5:7b" />
+                    </div>
+                    <div class="row">
+                        <button type="button" class="btn btn-primary" id="testLLM">测试连接</button>
+                        <button type="button" class="btn btn-primary" id="saveLLM">保存接入</button>
+                    </div>
+                    <p id="llmStatus" role="status"></p>
+                </section>
+
+                <!-- ===== 角色模型 ===== -->
+                <section class="card" id="sec-model">
+                    <div class="card-title"><span class="icon">🎭</span>角色模型选择</div>
+                    <div class="card-desc">切换桌宠角色，每个角色有独立的性格与人设。切换后程序自动重启加载新模型。下拉菜单标注了「有动画/无动画」和表情数量。</div>
+                    <div class="switch-row">
+                        <div style="flex:1;">
+                            <div class="lbl">选择角色</div>
+                            <div class="desc">芙宁娜、胡桃、纳西妲、甘雨、芭芭拉、菈乌玛、奈芙尔、丝柯克</div>
+                            <select id="modelPath" style="margin-top:8px;width:100%;padding:8px 12px;border-radius:8px;border:1px solid var(--line);background:#fbfaf6;color:var(--ink);font-size:14px;font-family:inherit;">
+                                <option value="models/芙宁娜">芙宁娜（默认）</option>
+                            </select>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- ===== 外观与渲染 ===== -->
+                <section class="card" id="sec-render">
+                    <div class="card-title"><span class="icon">🎨</span>外观与渲染</div>
+                    <div class="card-desc">调整桌宠整体大小、位置、物理强度、清晰度、透明度和帧率。保存后桌宠自动重新加载，立即生效。</div>
+                    <div class="field">
+                        <label for="scale">整体缩放：<span id="scalev" style="font-weight:700">100</span>%</label>
+                        <input type="range" id="scale" min="30" max="150" step="1" value="100" />
+                        <div class="hint">100% 为默认大小，最小 30%、最大 150%。宽高同步变化、绝不变形。</div>
+                    </div>
+                    <div class="field">
+                        <label for="px">窗口位置 X：<span id="pxv" style="font-weight:700">…</span> px</label>
+                        <input type="range" id="px" step="1" />
+                        <div class="hint">拖动滑块可实时移动桌宠（范围 = 当前屏幕工作区）</div>
+                    </div>
+                    <div class="field">
+                        <label for="py">窗口位置 Y：<span id="pyv" style="font-weight:700">…</span> px</label>
+                        <input type="range" id="py" step="1" />
+                        <div class="hint">拖动滑块可实时移动桌宠（范围 = 当前屏幕工作区）</div>
+                    </div>
+                    <div class="field">
+                        <label for="ps">物理强度：<span id="psv" style="font-weight:700">1.0</span> 倍</label>
+                        <input type="range" id="ps" min="0.1" max="5" step="0.1" value="1" />
+                        <div class="hint">数值越大，衣服/头发在待机时的物理飘动越明显</div>
+                    </div>
+                    <div class="field">
+                        <label for="rs">输出清晰度：<span id="rsv" style="font-weight:700">1.0</span>×</label>
+                        <input type="range" id="rs" min="1" max="2" step="0.1" value="1" />
+                        <div class="hint">数值越大，模型内部渲染分辨率越高、边缘越清晰，也更耗性能</div>
+                    </div>
+                    <div class="field">
+                        <label for="opacity">模型透明度：<span id="opacityv" style="font-weight:700">100</span>%</label>
+                        <input type="range" id="opacity" min="10" max="100" step="1" value="100" />
+                        <div class="hint">调节桌宠模型的整体不透明度（10%~100%），可与桌面壁纸更好地融合</div>
+                    </div>
+                    <div class="field">
+                        <label for="targetFps">目标帧率：<span id="targetFpsVal" style="font-weight:700;color:var(--accent-dark);">60</span> fps</label>
+                        <input type="range" id="targetFps" min="15" max="120" step="1" value="60" />
+                        <div class="hint">稳定渲染帧率。默认 60fps 流畅运行，降低可省 CPU/功耗。范围 15~120。</div>
+                    </div>
+                </section>
+
+                <!-- ===== 开关与模式 ===== -->
+                <section class="card" id="sec-switch">
+                    <div class="card-title"><span class="icon">⚙</span>开关与模式</div>
+                    <div class="switch-row">
+                        <div>
+                            <div class="lbl">静音模式</div>
+                            <div class="desc">开启后，桌宠不再显示任何聊天气泡/情绪台词，只保留 Live2D 动画与表情。适合纯动画观赏或安静工作场景。</div>
+                        </div>
+                        <input type="checkbox" id="muted" />
+                    </div>
+                    <div class="switch-row">
+                        <div>
+                            <div class="lbl">音量感知情绪反馈</div>
+                            <div class="desc">开启后，桌宠会定期读取 macOS 系统输出音量做反应：大音量 → 欢快表情；静音 → 安静陪伴表情。</div>
+                        </div>
+                        <input type="checkbox" id="volumeSense" checked />
+                    </div>
+                    <div class="switch-row">
+                        <div>
+                            <div class="lbl">全屏应用自动隐藏</div>
+                            <div class="desc">开启后检测到全屏游戏/视频时桌宠自动隐藏，退出全屏立即恢复。避免遮挡画面。</div>
+                        </div>
+                        <input type="checkbox" id="autoHideFullscreen" />
+                    </div>
+                    <div class="switch-row">
+                        <div>
+                            <div class="lbl">联网搜索</div>
+                            <div class="desc">开启后对话时自动联网搜索补充信息。需要能访问 DuckDuckGo/Wikipedia（国内需梯子），无梯子请保持关闭。</div>
+                        </div>
+                        <input type="checkbox" id="webSearchEnabled" />
+                    </div>
+                </section>
+
+                <!-- ===== 人设定制 ===== -->
+                <section class="card" id="sec-prompt">
+                    <div class="card-title"><span class="icon">✦</span>人设定制（System Prompt）</div>
+                    <div class="info-band">
+                        留空即使用内置角色人设（含全局固定框架）。自定义时建议保留：①自称方式 ②回复长度限制 ③情绪标签规则（第一行（情绪名）），保证表情+气泡格式正常工作。
+                    </div>
+                    <div class="field">
+                        <label for="systemPrompt">聊天对话人设</label>
+                        <textarea id="systemPrompt" placeholder="留空使用内置角色人设。用于正式聊天（双击模型输入框发送消息）。"></textarea>
+                        <div class="hint">可写入性格、自称、世界观、回复规则等。保存后立即作为大模型系统提示生效。</div>
+                    </div>
+                    <div class="field">
+                        <label for="moodPrompt">悬停情绪话 Prompt</label>
+                        <textarea id="moodPrompt" placeholder="留空使用默认。鼠标移到模型身上时，桌宠会随机说一句 20 字以内的短句。"></textarea>
+                        <div class="hint">用于鼠标悬停时的搭话。建议：20 字以内、每次不同。</div>
+                    </div>
+                    <div class="field">
+                        <label for="touchPrompt">触碰反馈 Prompt 前缀</label>
+                        <textarea id="touchPrompt" placeholder="留空使用默认。用于点击模型各部位的撒娇反馈，此处仅用于覆写前缀人设基调。"></textarea>
+                        <div class="hint">建议写入人设风格、自称口吻等基调性描述，不用写具体部位要求。</div>
+                    </div>
+                </section>
+
+                <!-- ===== 部位判定 ===== -->
+                <section class="card" id="sec-band">
+                    <div class="card-title"><span class="icon">⊕</span>部位点击判定</div>
+                    <div class="info-band">拖动下方分界线，可自定义点击模型不同部位（头 / 胸 / 腰 / 私处 / 腿 / 脚）的反馈范围。数值 = 分界点占模型画布高度的百分比，从上到下依次递增。</div>
+                    <div class="field">
+                        <label for="bHead">头部分界：<span id="bHeadv" style="font-weight:700">25</span>%</label>
+                        <input type="range" id="bHead" min="0" max="40" step="1" value="25" />
+                        <div class="hint">0% ~ 此值 判为「头」（摸头反馈）</div>
+                    </div>
+                    <div class="field">
+                        <label for="bChest">胸部分界：<span id="bChestv" style="font-weight:700">34</span>%</label>
+                        <input type="range" id="bChest" min="5" max="55" step="1" value="34" />
+                        <div class="hint">头部分界 ~ 此值 判为「胸」</div>
+                    </div>
+                    <div class="field">
+                        <label for="bWaist">腰部分界：<span id="bWaistv" style="font-weight:700">45</span>%</label>
+                        <input type="range" id="bWaist" min="10" max="65" step="1" value="45" />
+                        <div class="hint">胸部分界 ~ 此值 判为「腰」</div>
+                    </div>
+                    <div class="field">
+                        <label for="bPriv">私处分界：<span id="bPrivv" style="font-weight:700">55</span>%</label>
+                        <input type="range" id="bPriv" min="20" max="75" step="1" value="55" />
+                        <div class="hint">腰部分界 ~ 此值 判为「私处」</div>
+                    </div>
+                    <div class="field">
+                        <label for="bFoot">脚部分界：<span id="bFootv" style="font-weight:700">60</span>%</label>
+                        <input type="range" id="bFoot" min="45" max="100" step="1" value="60" />
+                        <div class="hint">私处分界 ~ 此值 判为「腿」，此值 ~ 100% 判为「脚」</div>
+                    </div>
+                </section>
+
+                <!-- ===== 记忆与调试 ===== -->
+                <section class="card" id="sec-debug">
+                    <div class="card-title"><span class="icon">🔧</span>记忆与调试</div>
+                    <div id="memoryPanel">
+                        <div>角色记忆档案</div>
+                        <div id="memoryContent">加载中…</div>
+                        <button type="button" id="btnResetMemory" class="btn btn-ghost" style="margin-top:10px;">重置当前角色记忆</button>
+                    </div>
+                    <div class="row" style="gap:10px; flex-wrap:wrap; margin-top:14px;">
+                        <button type="button" id="btnExportLog" class="btn btn-secondary" style="flex:1 1 180px;">导出调试日志</button>
+                        <button type="button" id="btnOpenLogs" class="btn btn-ghost" style="flex:1 1 160px;">打开日志目录</button>
+                    </div>
+                    <div class="info-band" style="margin-top:12px;">
+                        <b>导出日志</b>：一键把版本信息、系统状态、LLM 接口请求/报错、配置变更记录（含脱敏 Key）打包成 .txt。<br>
+                        <b>自动恢复</b>：如果 config.json 被意外损坏，程序不会崩溃，自动备份并重置为出厂默认。
+                    </div>
+                    <div id="resetBanner" class="status err" style="display:none;">
+                        <b>配置已自动重置</b>：config.json 解析失败，已备份为 <code>config.json.bak</code> 并恢复出厂默认。请重新设置个性化参数。
+                    </div>
+                </section>
+
+                <!-- ===== 聊天测试 ===== -->
+                <section class="card" id="sec-chat">
+                    <div class="card-title"><span class="icon">💬</span>聊天测试</div>
+                    <div class="card-desc">由你所接入的大模型驱动，回复会同步显示在桌宠的气泡里。</div>
+                    <div class="chat-area" style="margin-top:0;padding-top:0;border-top:none;">
+                        <div class="row">
+                            <input type="text" id="chatInput" placeholder="想对桌宠说点什么…" maxlength="300" />
+                            <button type="button" class="btn-send" id="chatSend">发送</button>
+                        </div>
+                        <div id="chatlog"></div>
+                    </div>
+                </section>
+
+                <!-- ===== 操作栏 ===== -->
+                <div class="actions-bar">
+                    <div class="bar-status" id="status" role="status"></div>
+                    <div class="bar-row">
+                        <button type="submit" class="btn btn-primary" id="save">保存并生效</button>
+                        <button type="button" class="btn btn-ghost" id="resetModel" title="将当前角色的所有设置恢复为出厂默认（位置自动贴右下角、缩放100%）">恢复默认</button>
+                        <button type="button" class="btn btn-secondary" id="dock">贴回右下角</button>
+                    </div>
                 </div>
             </form>
-        </section>
+        </div>
     </main>
 
     <script>
@@ -351,18 +717,54 @@
         const statusEl = $("status");
 
         // 载入当前配置 + 屏幕信息（给位置滑块定范围）
+        // v2.0.3 每角色独立设置：记录当前加载的角色，保存后若切换了角色则自动刷新表单显示该角色的专属设置
+        let currentModelPath = null;
         async function load() {
             try {
                 const [r1, r2] = await Promise.all([fetch("/api/settings"), fetch("/api/screen")]);
                 const cfg = await r1.json();
                 const scr = await r2.json();
+                currentModelPath = cfg.modelPath || "models/芙宁娜";
                 $("scale").value = cfg.scalePercent || 100;
                 $("scalev").textContent = cfg.scalePercent || 100;
                 $("ps").value = cfg.physicsStrength || 1;
                 $("psv").textContent = (cfg.physicsStrength || 1).toFixed(1);
                 $("rs").value = cfg.renderScale || 1;
                 $("rsv").textContent = (cfg.renderScale || 1).toFixed(1);
-                // 部位点击判定分界（百分比）
+                const op = Number(cfg.opacity);
+                const opPct = Math.round((isNaN(op) ? 1.0 : Math.min(1.0, Math.max(0.1, op))) * 100);
+                $("opacity").value = opPct;
+                $("opacityv").textContent = opPct;
+                $("muted").checked = !!cfg.muted;
+                $("volumeSense").checked = cfg.volumeSense !== false;
+                $("autoHideFullscreen").checked = !!cfg.autoHideFullscreen;
+                $("webSearchEnabled").checked = !!cfg.webSearchEnabled;
+                const fps = Math.max(15, Math.min(120, Number(cfg.targetFps) || 60));
+                $("targetFps").value = fps;
+                $("targetFpsVal").textContent = fps;
+                try {
+                    const r = await fetch("/api/models");
+                    const d = await r.json();
+                    if (d.ok && d.models) {
+                        const sel = $("modelPath");
+                        sel.innerHTML = "";
+                        d.models.forEach(m => {
+                            const opt = document.createElement("option");
+                            opt.value = m.path;
+                            opt.textContent = m.name + "（" + (m.hasMotions ? "有动画" : "无动画") + "）" + (m.expressions.length > 0 ? ` · ${m.expressions.length}表情` : "");
+                            if (m.disabled) {
+                                opt.disabled = true;
+                                opt.textContent = m.name + "（模型暂未适配，敬请期待）";
+                                opt.style.color = "#b0aca4";
+                            }
+                            if (m.path === (cfg.modelPath || "models/芙宁娜")) opt.selected = true;
+                            sel.appendChild(opt);
+                        });
+                    }
+                } catch {}
+                $("systemPrompt").value = cfg.systemPrompt ? String(cfg.systemPrompt) : "";
+                $("moodPrompt").value = cfg.moodPrompt ? String(cfg.moodPrompt) : "";
+                $("touchPrompt").value = cfg.touchPrompt ? String(cfg.touchPrompt) : "";
                 const band = cfg.band || {};
                 const bandMap = { bHead: "headBottom", bChest: "chestBottom", bWaist: "waistBottom", bPriv: "legTop", bFoot: "footTop" };
                 const bandDef = { bHead: 25, bChest: 34, bWaist: 45, bPriv: 55, bFoot: 60 };
@@ -371,7 +773,6 @@
                     $(id).value = v;
                     $(id + "v").textContent = v;
                 }
-                // 位置滑块：范围 = 屏幕工作区可移动区间
                 const wa = scr.workArea;
                 const [ww, wh] = scr.windowSize || [0, 0];
                 const px = $("px"), py = $("py");
@@ -379,43 +780,37 @@
                 px.max = Math.max(wa.x, wa.x + wa.width - ww);
                 py.min = wa.y;
                 py.max = Math.max(wa.y, wa.y + wa.height - wh);
-                // 配置为 -1（自动贴右下角）时，滑块显示当前实际位置
                 let cx = cfg.positionX, cy = cfg.positionY;
                 if ((cx < 0 || cy < 0) && scr.windowPos) {
                     cx = scr.windowPos[0]; cy = scr.windowPos[1];
                 }
                 px.value = cx; py.value = cy;
                 $("pxv").textContent = Math.round(cx); $("pyv").textContent = Math.round(cy);
+                try {
+                    const r3 = await fetch("/api/health");
+                    const h = await r3.json();
+                    if (h && h.configReset) {
+                        const rb = document.getElementById("resetBanner");
+                        if (rb) rb.style.display = "block";
+                    }
+                } catch {}
             } catch (e) {
                 statusEl.textContent = "读取配置失败，请确认桌宠正在运行。";
                 statusEl.className = "err";
             }
         }
 
-        // 缩放滑块实时显示数值
-        $("scale").addEventListener("input", () => {
-            $("scalev").textContent = $("scale").value;
-        });
+        $("scale").addEventListener("input", () => { $("scalev").textContent = $("scale").value; });
+        $("ps").addEventListener("input", () => { $("psv").textContent = Number($("ps").value).toFixed(1); });
+        $("rs").addEventListener("input", () => { $("rsv").textContent = Number($("rs").value).toFixed(1); });
+        $("opacity").addEventListener("input", () => { $("opacityv").textContent = $("opacity").value; });
+        $("targetFps").addEventListener("input", () => { $("targetFpsVal").textContent = $("targetFps").value; });
 
-        // 物理强度滑块实时显示数值
-        $("ps").addEventListener("input", () => {
-            $("psv").textContent = Number($("ps").value).toFixed(1);
-        });
-
-        // 输出清晰度滑块实时显示数值
-        $("rs").addEventListener("input", () => {
-            $("rsv").textContent = Number($("rs").value).toFixed(1);
-        });
-
-        // 部位点击判定分界滑块：实时显示百分比
         const bandIds = ["bHead", "bChest", "bWaist", "bPriv", "bFoot"];
         bandIds.forEach((id) => {
-            $(id).addEventListener("input", (e) => {
-                $(id + "v").textContent = Number(e.target.value);
-            });
+            $(id).addEventListener("input", (e) => { $(id + "v").textContent = Number(e.target.value); });
         });
 
-        // 位置滑块：拖动时实时移动桌宠（节流 60ms），并写入 config.json 持久化
         let moveTimer = null;
         function moveWindow(axis, val) {
             const cur = { x: Number($("px").value), y: Number($("py").value) };
@@ -434,7 +829,6 @@
         $("px").addEventListener("input", (e) => moveWindow("x", e.target.value));
         $("py").addEventListener("input", (e) => moveWindow("y", e.target.value));
 
-        // 贴回右下角：位置重置为 -1，由主进程自动贴齐
         $("dock").addEventListener("click", async () => {
             try {
                 await fetch("/api/settings", {
@@ -458,6 +852,7 @@
             statusEl.textContent = "保存中…";
             statusEl.className = "";
             try {
+                const opacityPct = Math.max(10, Math.min(100, Number($("opacity").value) || 100));
                 const r = await fetch("/api/settings", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
@@ -467,6 +862,16 @@
                         positionY: Number($("py").value),
                         physicsStrength: Number($("ps").value),
                         renderScale: Number($("rs").value),
+                        opacity: opacityPct / 100,
+                        muted: $("muted").checked,
+                        volumeSense: $("volumeSense").checked,
+                        autoHideFullscreen: $("autoHideFullscreen").checked,
+                        webSearchEnabled: $("webSearchEnabled").checked,
+                        targetFps: Number($("targetFps").value),
+                        modelPath: $("modelPath").value,
+                        systemPrompt: $("systemPrompt").value,
+                        moodPrompt: $("moodPrompt").value,
+                        touchPrompt: $("touchPrompt").value,
                         band: {
                             headBottom: Number($("bHead").value),
                             chestBottom: Number($("bChest").value),
@@ -480,6 +885,11 @@
                 if (data.ok) {
                     statusEl.textContent = "已保存，桌宠正在重新加载生效…";
                     statusEl.className = "ok";
+                    // v2.0.3 切换了角色：刷新表单，显示目标角色的专属设置（位置/缩放/人设等各不同）
+                    const submittedModel = $("modelPath").value;
+                    if (submittedModel && submittedModel !== currentModelPath) {
+                        setTimeout(async () => { await load(); }, 600);
+                    }
                 } else {
                     throw new Error(data.error || "保存失败");
                 }
@@ -491,7 +901,6 @@
             }
         });
 
-        // ---------- 接入大模型：读取 / 切换 / 测试 / 保存 ----------
         const llmStatus = $("llmStatus");
         function llmPayload() {
             return {
@@ -516,16 +925,15 @@
                 if (d && d.ok && d.llm) {
                     const l = d.llm;
                     $("llmProvider").value = l.provider === "ollama" ? "ollama" : "deepseek";
-                    // 已填过的 Key 显示为掩码；用户可覆盖，留空则保留原值
                     $("apiKey").placeholder = l.apiKey ? "已保存（" + l.apiKey + "）覆盖请输入新 Key" : "sk-…";
                     $("baseUrl").value = l.baseUrl || "";
                     $("model").value = l.model || "";
                     $("ollamaUrl").value = l.ollamaUrl || "";
                     $("ollamaModel").value = l.ollamaModel || "";
-                    $("apiKey").value = ""; // 出于安全不反向回填明文
+                    $("apiKey").value = "";
                     syncProviderUI();
-                    if (d.configured) llmStatus.textContent = "✅ 已接入大模型，可正常对话。";
-                    else llmStatus.textContent = "尚未接入大模型，请填写后保存（首次启动时会提醒你）。";
+                    if (d.configured) llmStatus.textContent = "已接入大模型，可正常对话。";
+                    else llmStatus.textContent = "尚未接入大模型，请填写后保存。";
                 }
             } catch {}
         }
@@ -544,7 +952,7 @@
                 if (d.ok) {
                     llmStatus.className = "ok";
                     llmStatus.textContent = action === "test"
-                        ? "连接成功，回复： " + (d.reply || "")
+                        ? "连接成功，回复：" + (d.reply || "")
                         : "已保存接入，桌宠可正常对话了~";
                     if (action === "save") loadLLM();
                 } else {
@@ -552,7 +960,7 @@
                 }
             } catch (e) {
                 llmStatus.className = "err";
-                llmStatus.textContent = (action === "test" ? "连接失败： " : "保存失败： ") + (e.message || e);
+                llmStatus.textContent = (action === "test" ? "连接失败：" : "保存失败：") + (e.message || e);
             } finally {
                 btn.disabled = false;
             }
@@ -560,7 +968,6 @@
         $("testLLM").addEventListener("click", () => doLLM("test"));
         $("saveLLM").addEventListener("click", () => doLLM("save"));
 
-        // ---------- 聊天：发送后回复同时推送到桌宠气泡 ----------
         const chatInput = $("chatInput"), chatSend = $("chatSend"), chatlog = $("chatlog");
         function appendChat(role, text) {
             const div = document.createElement("div");
@@ -593,6 +1000,131 @@
         }
         chatSend.addEventListener("click", sendChat);
         chatInput.addEventListener("keydown", (e) => { if (e.key === "Enter") sendChat(); });
+
+        (function bindLogButtons() {
+            const btnExport = document.getElementById("btnExportLog");
+            const btnOpen = document.getElementById("btnOpenLogs");
+            const toast = (msg, cls) => {
+                statusEl.textContent = msg;
+                statusEl.className = cls || "ok";
+                setTimeout(() => { if (statusEl.textContent === msg) { statusEl.textContent = ""; statusEl.className = ""; } }, 3000);
+            };
+            if (btnExport) {
+                btnExport.addEventListener("click", async () => {
+                    try {
+                        btnExport.disabled = true;
+                        toast("正在收集日志，请稍候…");
+                        const res = await fetch("/api/logs/export");
+                        if (!res.ok) throw new Error("HTTP " + res.status);
+                        const blob = await res.blob();
+                        const url = URL.createObjectURL(blob);
+                        let filename = "fpet-debug-logs.txt";
+                        try {
+                            const cd = res.headers.get("Content-Disposition") || "";
+                            const m = cd.match(/filename="?([^";]+)"?/);
+                            if (m && m[1]) filename = m[1];
+                        } catch {}
+                        const a = document.createElement("a");
+                        a.href = url; a.download = filename;
+                        document.body.appendChild(a);
+                        a.click();
+                        a.remove();
+                        setTimeout(() => URL.revokeObjectURL(url), 10000);
+                        toast("调试日志已导出：" + filename);
+                    } catch (e) {
+                        toast("导出日志失败：" + (e.message || e), "err");
+                    } finally {
+                        btnExport.disabled = false;
+                    }
+                });
+            }
+            if (btnOpen) {
+                btnOpen.addEventListener("click", async () => {
+                    try {
+                        const res = await fetch("/api/logs/reveal");
+                        const j = await res.json().catch(() => ({}));
+                        if (!res.ok || !j.ok) throw new Error((j && j.error) || "HTTP " + res.status);
+                        toast("已在 Finder 中定位到日志目录");
+                    } catch (e) {
+                        toast("打开日志目录失败：" + (e.message || e), "err");
+                    }
+                });
+            }
+            (async function loadMemory() {
+                const memEl = document.getElementById("memoryContent");
+                const btnReset = document.getElementById("btnResetMemory");
+                async function refreshMemory() {
+                    try {
+                        const r = await fetch("/api/memory");
+                        const d = await r.json();
+                        if (d.ok && d.memory) {
+                            const m = d.memory;
+                            const touchList = Object.entries(m.touchCounts || {}).map(([k, v]) => `${k}×${v}`).join("、") || "无";
+                            const tags = (m.impressionTags || []).join("、") || "尚未了解";
+                            const traits = (m.personalityTraits || []).join("、") || "尚未形成明显变化";
+                            memEl.innerHTML = [
+                                `角色：<b>${d.character}</b>　阶段：<b>${d.stage}</b>（好感度 ${m.affection}/100）`,
+                                `<span style="color:var(--muted-light)">${d.desc}</span>`,
+                                `累计对话 <b>${m.totalChats}</b> 次　累计触碰 <b>${m.totalTouches}</b> 次`,
+                                `触碰统计：${touchList}`,
+                                `印象标签：${tags}`,
+                                `人格变化：${traits}`,
+                                m.firstMet ? `初次相遇：${m.firstMet.slice(0, 10)}` : "",
+                            ].filter(Boolean).join("<br>");
+                        }
+                    } catch {}
+                }
+                refreshMemory();
+                setInterval(refreshMemory, 5000);
+                if (btnReset) {
+                    btnReset.addEventListener("click", async () => {
+                        if (!confirm("确定要重置当前角色的记忆吗？好感度、触碰记录、印象标签、人格变化将全部清零。")) return;
+                        try {
+                            await fetch("/api/memory/reset", { method: "POST" });
+                            refreshMemory();
+                            toast("记忆已重置");
+                        } catch (e) { toast("重置失败", "err"); }
+                    });
+                }
+            })();
+        })();
+
+        // 侧栏导航高亮
+        const navLinks = document.querySelectorAll(".sidebar nav a");
+        const sections = document.querySelectorAll(".card");
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    const id = entry.target.id;
+                    navLinks.forEach(a => {
+                        a.classList.toggle("active", a.getAttribute("href") === "#" + id);
+                    });
+                }
+            });
+        }, { rootMargin: "-20% 0px -60% 0px" });
+        sections.forEach(s => observer.observe(s));
+
+        // v2.0.3 恢复默认：把「当前角色」的所有设置重置为出厂默认并刷新表单
+        const btnResetModel = document.getElementById("resetModel");
+        if (btnResetModel) {
+            btnResetModel.addEventListener("click", async () => {
+                if (!confirm("确定要把当前角色的所有设置恢复为出厂默认吗？\n（缩放100%、位置自动贴右下角、人设/部位分界等全部重置）")) return;
+                try {
+                    const r = await fetch("/api/settings", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ resetCurrentModel: true, modelPath: $("modelPath").value }),
+                    });
+                    const d = await r.json();
+                    if (d.ok) {
+                        await load();
+                        toast("当前角色设置已恢复默认");
+                    } else {
+                        toast("恢复失败", "err");
+                    }
+                } catch (e) { toast("恢复失败：" + (e.message || e), "err"); }
+            });
+        }
 
         load();
         loadLLM();

@@ -1,0 +1,36 @@
+{
+	"Version": 3,
+	"FileReferences": {
+		"Moc": "Ganyu1024.moc3",
+		"Textures": [
+			"Ganyu1024.1024/texture_00.png",
+			"Ganyu1024.1024/texture_01.png",
+			"Ganyu1024.1024/texture_02.png"
+		],
+		"Physics": "Ganyu1024.physics3.json",
+		"DisplayInfo": "Ganyu1024.cdi3.json",
+		"Expressions": [
+			{"Name": "HighLight_Off", "File": "HighLight_Off.exp3.json"},
+			{"Name": "Seriously", "File": "Seriously.exp3.json"},
+			{"Name": "Shy", "File": "Shy.exp3.json"}
+		]
+	},
+	"Groups": [
+		{
+			"Target": "Parameter",
+			"Name": "EyeBlink",
+			"Ids": [
+				"ParamEyeLOpen",
+				"ParamEyeROpen"
+			]
+		},
+		{
+			"Target": "Parameter",
+			"Name": "LipSync",
+			"Ids": [
+				"ParamMouthForm",
+				"ParamMouthOpenY"
+			]
+		}
+	]
+}

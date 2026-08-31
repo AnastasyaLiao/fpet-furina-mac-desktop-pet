@@ -1,0 +1,27 @@
+{
+	"Version": 3,
+	"FileReferences": {
+		"Moc": "Nefer.moc3",
+		"Textures": [
+			"Nefer.4096/texture_00.png",
+			"Nefer.4096/texture_01.png"
+		],
+		"Physics": "Nefer.physics3.json",
+		"DisplayInfo": "Nefer.cdi3.json"
+	},
+	"Groups": [
+		{
+			"Target": "Parameter",
+			"Name": "LipSync",
+			"Ids": []
+		},
+		{
+			"Target": "Parameter",
+			"Name": "EyeBlink",
+			"Ids": [
+				"ParamEyeLOpen",
+				"ParamEyeROpen"
+			]
+		}
+	]
+}

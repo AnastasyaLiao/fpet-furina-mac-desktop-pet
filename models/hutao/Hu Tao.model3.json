@@ -1,0 +1,38 @@
+{
+	"Version": 3,
+	"FileReferences": {
+		"Moc": "Hu Tao.moc3",
+		"Textures": [
+			"Hu Tao.8192/texture_00.png",
+			"Hu Tao.8192/texture_01.png",
+			"Hu Tao.8192/texture_02.png"
+		],
+		"Physics": "Hu Tao.physics3.json",
+		"DisplayInfo": "Hu Tao.cdi3.json",
+		"Expressions": [
+			{"Name": "Angry", "File": "Angry.exp3.json"},
+			{"Name": "EyeshineOff", "File": "EyeshineOff.exp3.json"},
+			{"Name": "Ghost", "File": "Ghost.exp3.json"},
+			{"Name": "GhostChange", "File": "GhostChange.exp3.json"},
+			{"Name": "PupilShrink", "File": "PupilShrink.exp3.json"},
+			{"Name": "SadLock", "File": "SadLock.exp3.json"},
+			{"Name": "Shadow", "File": "Shadow.exp3.json"},
+			{"Name": "SmileLock", "File": "SmileLock.exp3.json"}
+		]
+	},
+	"Groups": [
+		{
+			"Target": "Parameter",
+			"Name": "LipSync",
+			"Ids": []
+		},
+		{
+			"Target": "Parameter",
+			"Name": "EyeBlink",
+			"Ids": [
+				"ParamEyeLOpen",
+				"ParamEyeROpen"
+			]
+		}
+	]
+}
