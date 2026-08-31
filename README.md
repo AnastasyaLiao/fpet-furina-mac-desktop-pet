@@ -27,6 +27,9 @@ A Live2D desktop pet that lives on your macOS screen, built with **Electron + PI
 - **Screen awareness (v2.1.0)**: when enabled, the pet captures your current screen and sends it together with your question to the LLM, so it can genuinely *see* the code / webpage / app you're looking at and answer far more accurately (e.g. it reads your code while you code, reads the page while you browse). Requires the macOS “Screen Recording” permission and pairs best with a multi-modal (vision-capable) model. It is **off by default** to protect your privacy and can be turned off anytime in Settings.
 - **Configurable LLM**: bring your own DeepSeek / Ollama key and model; nothing is hard-coded.
 - **Adjustable render quality**: 1×–2× output resolution slider; adjustable physics intensity; adjustable idle/active FPS.
+- **Game saver (v2.1.1)**: when a game is running in the foreground in a **window**, the pet automatically lowers itself to 23 FPS and 1× resolution to free up resources for the game, and restores your original FPS / sharpness the moment you quit. (Full-screen games are already covered by the auto-hide option.)
+- **Smarter chat bubble (v2.1.1)**: the speech bubble no longer covers the character's head — it shows directly above the head by default, and automatically moves to the left / right side of the head whenever the screen edge (menu bar) would occlude it.
+- **Refreshed Furina persona (v2.1.1)**: following the Fontaine storyline, Furina is now portrayed as the ex-archon — a warm, drama-loving, lightly teasing best friend to the Traveler (no more lofty "elegant/tsundere goddess" air). The default render FPS is also tuned down to 23 for lower power use.
 - **Login auto-start**: launches at login (toggle in the tray menu).
 
 ### Tech Stack
@@ -44,7 +47,7 @@ A Live2D desktop pet that lives on your macOS screen, built with **Electron + PI
 
 ### Install (macOS Apple Silicon)
 
-Download **fpet-2.1.0-arm64.dmg** from the [Releases](https://github.com/AnastasyaLiao/fpet-furina-mac-desktop-pet/releases) page, open it and drag **fpet** into your Applications folder.
+Download **fpet-2.1.1-arm64.dmg** from the [Releases](https://github.com/AnastasyaLiao/fpet-furina-mac-desktop-pet/releases) page, open it and drag **fpet** into your Applications folder.
 
 ### Usage
 
@@ -110,7 +113,7 @@ npm start        # launch the pet
 
 ```bash
 npm install
-npm run dist     # → dist/fpet-2.1.0-arm64.dmg
+npm run dist     # → dist/fpet-2.1.1-arm64.dmg
 ```
 
 ### License
@@ -141,6 +144,9 @@ npm run dist     # → dist/fpet-2.1.0-arm64.dmg
 - **屏幕感知（v2.1.0）**：开启后，对话时会把当前屏幕截图一起发给所接入的大模型，让它能“看到”你正在看的代码 / 网页 / 应用，从而更准确地回答你——写代码时它能读懂你的代码、看网页时它能读懂页面内容。截图仅在本地生成、仅发给你自己配置的大模型（建议搭配支持图片的多模态模型）。需要 macOS「屏幕录制」权限；**默认关闭以保护隐私**，可在设置面板一键关闭。
 - **可配置大模型**：接入你自己的 DeepSeek / Ollama 密钥与模型，代码不内置任何厂商密钥。
 - **可调渲染质量**：1×~2× 输出分辨率滑块；物理强度可调；待机/活跃帧率可调。
+- **游戏节能（v2.1.1）**：检测到前台正在**窗口化**打游戏时，桌宠自动降到 23fps、分辨率降到 1×，给游戏让出更多资源；退出游戏立即恢复你原本的帧率 / 清晰度。（全屏游戏自动隐藏已覆盖。）
+- **更聪明的聊天气泡（v2.1.1）**：修复聊天框遮挡角色头部——气泡默认显示在头顶正上方；当屏幕上沿 / 菜单栏会夹住气泡时，会自动移到头部左侧或右侧。
+- **芙宁娜人设重构（v2.1.1）**：贴合枫丹主线——芙宁娜塑造为「已卸下神位的枫丹少女、旅行者的知己挚友」：热情俏皮、爱开玩笑、会讨“出场费”、幽默自嘲，也藏有五百年来孤独与伤疤的敏感脆弱，绝不摆架子、绝不高高在上；同时默认渲染帧率调整为 23fps，更省电。
 - **开机自启**：登录时自动启动（可在托盘菜单开关）。
 
 ### 技术栈
@@ -158,7 +164,7 @@ npm run dist     # → dist/fpet-2.1.0-arm64.dmg
 
 ### 安装（macOS Apple Silicon）
 
-从 [Releases](https://github.com/AnastasyaLiao/fpet-furina-mac-desktop-pet/releases) 页面下载 **fpet-2.1.0-arm64.dmg**，打开后把 **fpet** 拖入「应用程序」即可。
+从 [Releases](https://github.com/AnastasyaLiao/fpet-furina-mac-desktop-pet/releases) 页面下载 **fpet-2.1.1-arm64.dmg**，打开后把 **fpet** 拖入「应用程序」即可。
 
 ### 常用交互
 
@@ -224,13 +230,21 @@ npm start        # 启动桌宠
 
 ```bash
 npm install
-npm run dist     # → dist/fpet-2.1.0-arm64.dmg
+npm run dist     # → dist/fpet-2.1.1-arm64.dmg
 ```
 
 ### 许可说明
 
 - **代码**：MIT License（见 LICENSE）。仅供学习交流，请勿商用。
 - **模型**：版权归 miHoYo / 画师 / 建模师所有；禁止商用、禁止盗卖、禁止二次配布（见上文[模型来源与版权](#模型来源与版权)）。
+
+---
+
+## v2.1.1 Release Notes
+
+- **游戏节能（全新）**：检测到前台正在打游戏（重点覆盖窗口化游戏）时，桌宠自动把渲染帧率降到 23fps、输出分辨率降到 1×，把 CPU/GPU 资源让给游戏；当你退出游戏回到桌面/其它应用时，自动恢复为你原本设定的帧率与清晰度。检测基于前台应用分类（原生 Steam、Steam/CrossOver、PlayCover 等均覆盖），仅在「进入 / 退出」切换时触发，不影响正常使用。全屏游戏仍由「全屏自动隐藏」接管。
+- **修复聊天气泡遮挡头部**：对话气泡之前可能盖住角色脸部，现已重写定位逻辑——气泡默认显示在头顶正上方；当屏幕上方空间不足（角色靠近菜单栏、屏幕上沿会夹住气泡）时，自动移到角色头部左侧或右侧，小三角也随之指向头部；仅当角色顶到最顶端、左右也无空间时才会允许气泡遮住脸（此时本无其它可放置的空位）。
+- **芙宁娜人设重构**：贴合《原神》枫丹主线，将芙宁娜从「优雅傲娇的水神」重塑为「已卸下神位、陪伴旅行者的知已挚友」——热情俏皮、爱开玩笑、会调侃要“出场费”、也会坦露五百年来孤独与伤疤沉淀的敏感脆弱，绝不摆架子、绝不高高在上；默认渲染帧率调整为 23fps，更省电。
 
 ---
 

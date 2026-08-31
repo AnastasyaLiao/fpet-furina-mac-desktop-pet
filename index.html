@@ -80,6 +80,23 @@
             border-style: solid;
             border-color: rgba(40, 48, 66, 0.4) transparent transparent;
         }
+        /* ===== v2.1.1 修复：气泡移到头部左右侧时，小三角指向头部（左侧/右侧） ===== */
+        #bubble.side-right::after {
+            bottom: auto;
+            top: 50%;
+            left: -8px;
+            transform: translateY(-50%);
+            border-width: 8px 8px 8px 0;
+            border-color: transparent rgba(40, 48, 66, 0.4) transparent transparent;
+        }
+        #bubble.side-left::after {
+            bottom: auto;
+            top: 50%;
+            right: -8px;
+            transform: translateY(-50%);
+            border-width: 8px 0 8px 8px;
+            border-color: transparent transparent transparent rgba(40, 48, 66, 0.4);
+        }
         #bubble.show {
             opacity: 1;
             transform: translateX(-50%) translateY(0);
@@ -173,7 +190,7 @@
                 });
 
                 // ---------- v2.0：稳定目标帧率（不再闲置降帧） ----------
-                const TARGET_FPS = Math.max(15, Math.min(120, Number(cfg.targetFps) || 60));
+                const TARGET_FPS = Math.max(15, Math.min(120, Number(cfg.targetFps) || 23));
                 try {
                     if (app.ticker && typeof app.ticker.maxFPS === "number") {
                         app.ticker.maxFPS = TARGET_FPS;
@@ -418,11 +435,43 @@
                         if (bub) {
                             const bw = bub.offsetWidth || 200;
                             const bh = bub.offsetHeight || 60;
-                            // 气泡中心对齐模型中心，底部 = 头顶上方 10px
-                            const centerX = clampX(wx + cx, bw);
-                            const bottomY = clampY(wy + (top - 10), bh);
-                            bub.style.left = Math.round(centerX - wx) + "px";
-                            bub.style.bottom = Math.round(wy + wh - bottomY) + "px";
+                            // ===== v2.1.1 修复：气泡不再遮挡角色头部 =====
+                            // 优先放头顶正上方；顶部放不下（被屏幕在上沿/菜单栏夹住）时自动移到头部左右侧，
+                            // 仅当角色顶到最顶端且左右也无空间时才回退为「盖在脸上」（此时本来就没有可放置的空位）。
+                            const headTop = top; // 模型内容顶部（头顶，窗口内 y）
+                            const headH = Math.max(1, lb.height * 0.25 * model.scale.y); // 头部约占模型上部 25%
+                            const headCY = headTop + headH / 2;   // 头部纵向中心（窗口内 y）
+                            const cxScreen = wx + cx;             // 模型中心（屏幕 x）
+                            // 顶部放置：气泡距头顶 10px，气泡顶端不能越过工作区顶（菜单栏之下）
+                            const canPlaceAbove = (wy + (headTop - 10) - bh) >= wa.y + M;
+                            if (canPlaceAbove) {
+                                // —— 头顶正上方（默认）——
+                                bub.classList.remove("side-right", "side-left");
+                                const centerX = clampX(cxScreen, bw);
+                                const bottomY = clampY(wy + (headTop - 10), bh);
+                                bub.style.left = Math.round(centerX - wx) + "px";
+                                bub.style.bottom = Math.round(wy + wh - bottomY) + "px";
+                            } else {
+                                // —— 顶部放不下 → 移到头部左侧或右侧（默认右侧，左侧空间更大才用左侧）——
+                                const gap = 12; // 气泡与头部的水平间隙
+                                const rightRoom = (wa.x + wa.width - M) - (cxScreen + bw / 2 + gap);
+                                const leftRoom = (cxScreen - bw / 2 - gap) - (wa.x + M);
+                                const useRight = rightRoom >= leftRoom;
+                                // 气泡中心：置于头部左侧/右侧，垂直方向对齐头部中心。（clampX 保证不越出工作区左右）
+                                const sideCenterX = clampX(cxScreen + (useRight ? (bw / 2 + gap) : -(bw / 2 + gap)), bw);
+                                // 垂直：气泡完整可见且竖直中心贴近头部中心（clampCY 夹在工作区上下内）
+                                const clampCY = (cy, h) => {
+                                    const mn = wa.y + M + h / 2;
+                                    const mx = wa.y + wa.height - M - h / 2;
+                                    return Math.min(Math.max(cy, mn), Math.max(mn, mx));
+                                };
+                                const cyScreen = clampCY(wy + headCY, bh);
+                                bub.classList.toggle("side-right", useRight);
+                                bub.classList.toggle("side-left", !useRight);
+                                bub.style.left = Math.round(sideCenterX - wx) + "px";
+                                // CSS bottom：气泡底到窗口底的距离（竖中心对齐头部中心）
+                                bub.style.bottom = Math.round(wy + wh - cyScreen - bh / 2) + "px";
+                            }
                         }
                     } catch {}
                 }

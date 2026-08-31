@@ -596,8 +596,8 @@
                     </div>
                     <div class="field">
                         <label for="targetFps" data-i18n="render.fps">目标帧率：<span id="targetFpsVal" style="font-weight:700;color:var(--accent-dark);"></span> fps</label>
-                        <input type="range" id="targetFps" min="15" max="120" step="1" value="60" />
-                        <div class="hint" data-i18n="render.fps.hint">稳定渲染帧率。默认 60fps 流畅运行，降低可省 CPU/功耗。范围 15~120。</div>
+                        <input type="range" id="targetFps" min="15" max="120" step="1" value="23" />
+                        <div class="hint" data-i18n="render.fps.hint">稳定渲染帧率。默认 23fps，可提高流畅或降低省资源。范围 15~120。</div>
                     </div>
                     </div>
                 </section>
@@ -775,7 +775,7 @@
                 "render.opacity": "Model opacity: <span id='opacityv' style='font-weight:700'></span>%",
                 "render.opacity.hint": "Adjust the pet's overall opacity (10%~100%) to blend better with your wallpaper",
                 "render.fps": "Target FPS: <span id='targetFpsVal' style='font-weight:700;color:var(--accent-dark);'></span> fps",
-                "render.fps.hint": "Stable render FPS. 60 is smooth by default; lower saves CPU/power. Range 15~120.",
+                "render.fps.hint": "Stable render FPS. 23 by default; raise for smoother, lower saves CPU/power. Range 15~120.",
                 "switch.title": "Toggles &amp; Modes",
                 "switch.muted": "Mute Mode", "switch.muted.desc": "Show no chat bubbles / emotion lines, keeping only Live2D animation and expressions. Good for pure animation or quiet work.",
                 "switch.volume": "Volume-Aware Emotion", "switch.volume.desc": "Periodically reads macOS output volume: loud → cheerful, muted → calm companion expression.",
@@ -887,7 +887,7 @@
                 "render.opacity": "模型透明度：<span id='opacityv' style='font-weight:700'></span>%",
                 "render.opacity.hint": "调节桌宠模型的整体不透明度（10%~100%），可与桌面壁纸更好地融合",
                 "render.fps": "目标帧率：<span id='targetFpsVal' style='font-weight:700;color:var(--accent-dark);'></span> fps",
-                "render.fps.hint": "稳定渲染帧率。默认 60fps 流畅运行，降低可省 CPU/功耗。范围 15~120。",
+                "render.fps.hint": "稳定渲染帧率。默认 23fps，可提高流畅或降低省资源。范围 15~120。",
                 "switch.title": "开关与模式",
                 "switch.muted": "静音模式", "switch.muted.desc": "开启后，桌宠不再显示任何聊天气泡/情绪台词，只保留 Live2D 动画与表情。适合纯动画观赏或安静工作场景。",
                 "switch.volume": "音量感知情绪反馈", "switch.volume.desc": "开启后，桌宠会定期读取 macOS 系统输出音量做反应：大音量 → 欢快表情；静音 → 安静陪伴表情。",
@@ -1037,7 +1037,7 @@
                 $("autoHideFullscreen").checked = !!cfg.autoHideFullscreen;
                 $("webSearchEnabled").checked = !!cfg.webSearchEnabled;
                 $("screenSense").checked = !!cfg.screenSense;
-                const fps = Math.max(15, Math.min(120, Number(cfg.targetFps) || 60));
+                const fps = Math.max(15, Math.min(120, Number(cfg.targetFps) || 23));
                 $("targetFps").value = fps;
                 $("targetFpsVal").textContent = fps;
                 try {
