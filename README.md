@@ -1,6 +1,6 @@
 # fpet — Genshin Desktop Pet (Live2D)
 
-A Live2D desktop pet that lives on your macOS screen, built with **Electron + PIXI + pixi-live2d5**. Transparent, frameless, always-on-top, mouse-click-through, draggable, and chatty. It supports **multiple characters** (Furina, Yae Miko, Nahida, Ganyu, Lauma…), per-character independent settings, a persistent **memory & personality evolution** system, and can be driven by **your own LLM** (DeepSeek / Ollama).
+A Live2D desktop pet that lives on your macOS / Windows screen, built with **Electron + PIXI + pixi-live2d5**. Transparent, frameless, always-on-top, mouse-click-through, draggable, and chatty. It supports **multiple characters** (Furina, Yae Miko, Nahida, Ganyu, Lauma…), per-character independent settings, a persistent **memory & personality evolution** system, and can be driven by **your own LLM** (DeepSeek / Ollama).
 
 > This project is for personal learning and entertainment only — **not for commercial use**. Model assets belong to their original artists / modellers / miHoYo. See [Model Sources & Copyright](#model-sources--copyright).
 
@@ -34,6 +34,7 @@ A Live2D desktop pet that lives on your macOS screen, built with **Electron + PI
 - **Personas synced to the latest story (v2.1.2)**: every enabled character (Furina, Yae Miko, Nahida, Ganyu) now carries a complete, up-to-date memory of their full journey — from origin to the latest canon events — plus a shared **Teyvat world-state context**, so they remember everything they've done and "live in the present" of the story. Defaults are now 23 FPS / 1× sharpness for lower power use, and Lauma is currently greyed out.
 - **Native settings window (v2.2.0)**: Settings now opens in a real desktop window (Electron BrowserWindow) instead of a browser tab — with a macOS traffic-light title bar (red/yellow/green), automatic **dark / light theme** that follows your system, and a **Liquid-Glass** translucent UI. The **Save button is always pinned to the title bar**, so you can save from anywhere without scrolling to the bottom. Also fixes the default welcome page that used to pop up on every launch.
 - **Login auto-start**: launches at login (toggle in the tray menu).
+- **Cross-platform (v3.0.0)**: now also runs on **Windows** with feature parity to macOS — the very same characters, memory, LLM, chat, screen awareness, game saver and tray. Platform branches are added to the shared main process, so the macOS build is left untouched.
 
 ### Tech Stack
 
@@ -44,13 +45,16 @@ A Live2D desktop pet that lives on your macOS screen, built with **Electron + PI
 | Live2D rendering | PIXI.js (WebGL) + pixi-live2d5 + Live2D Cubism 5 Core |
 | IPC | Electron IPC (`ipcMain` / `ipcRenderer`) |
 | Local server | Node.js built-in `http` server (settings panel / chat API / SSE streaming) |
-| System monitoring | macOS commands: `osascript`, `ps`, `sysctl`, `pmset` |
+| System monitoring | macOS commands: `osascript`, `ps`, `sysctl`, `pmset` · Windows commands: PowerShell (`user32` foreground window / `CIM` CPU·battery) |
 | AI driver | Configurable LLM: DeepSeek (OpenAI-compatible API) / Ollama (local) |
-| Packaging | electron-builder (`npm run dist` → dmg) |
+| Packaging | electron-builder (`npm run dist` → dmg · `npm run dist:win` → exe) |
 
-### Install (macOS Apple Silicon)
+### Install
 
-Download **fpet-2.2.0-arm64.dmg** from the [Releases](https://github.com/AnastasyaLiao/fpet-furina-mac-desktop-pet/releases) page, open it and drag **fpet** into your Applications folder.
+Download from the [Releases](https://github.com/AnastasyaLiao/fpet-furina-mac-desktop-pet/releases) page.
+
+- **macOS (Apple Silicon)**: **fpet-3.0.0-arm64.dmg** — open it and drag **fpet** into your Applications folder.
+- **Windows (x64)**: **fpet-3.0.0-win-x64.exe** — run it and follow the installer.
 
 ### Usage
 
@@ -116,7 +120,8 @@ npm start        # launch the pet
 
 ```bash
 npm install
-npm run dist     # → dist/fpet-2.2.0-arm64.dmg
+npm run dist       # → dist/fpet-3.0.0-arm64.dmg (macOS)
+npm run dist:win   # → dist/fpet-3.0.0-win-x64.exe (Windows)
 ```
 
 ### License
@@ -154,6 +159,7 @@ npm run dist     # → dist/fpet-2.2.0-arm64.dmg
 - **角色人设对齐最新剧情（v2.1.2）**：芙宁娜、八重神子、纳西妲、甘雨均更新为《原神》当前真实剧情推进后的最新性格，并为每个角色注入完整「过往记忆清单」（从最初至今的全部关键经历，确保任何事都不会被忘记），同时新增**提瓦特世界观与发展趋势**设定，让角色真实地活在“当下”的提瓦特世界里作答。默认以 23fps / 1× 清晰度运行更省电；菈乌玛暂灰显禁用。
 - **原生设置窗口（v2.2.0）**：设置面板从「浏览器网页」改为**原生图形化桌面窗口**——macOS 左上角红 / 黄 / 绿交通灯标题栏、自动跟随系统**深色 / 浅色主题**、全新**液态玻璃**半透明 UI；**保存按钮常驻标题栏置顶**，任何位置都能一键保存，无需滑到页面底部。同时修复了每次启动弹出默认欢迎页的问题。
 - **开机自启**：登录时自动启动（可在托盘菜单开关）。
+- **跨平台（v3.0.0）**：除 macOS 外，新增 **Windows** 版本，功能与 macOS 几乎完全一致——同一套角色、记忆、接入大模型、对话、屏幕感知、游戏节能与托盘；主进程按平台分支实施，macOS 构建不受影响。
 
 ### 技术栈
 
@@ -164,13 +170,16 @@ npm run dist     # → dist/fpet-2.2.0-arm64.dmg
 | Live2D 渲染 | PIXI.js（WebGL）+ pixi-live2d5 + Live2D Cubism 5 Core |
 | 进程通信 | Electron IPC（`ipcMain` / `ipcRenderer`） |
 | 本地服务 | Node.js 内置 `http` 服务器（设置面板 / 聊天 API / SSE 流式） |
-| 系统监控 | macOS 命令：`osascript`、`ps`、`sysctl`、`pmset` |
+| 系统监控 | macOS 命令：`osascript`、`ps`、`sysctl`、`pmset` · Windows 命令：PowerShell（`user32` 前台窗口 / `CIM` CPU·电量） |
 | AI 驱动 | 可配置大模型：DeepSeek（OpenAI 兼容 API）/ Ollama（本地） |
-| 打包分发 | electron-builder（`npm run dist` → dmg） |
+| 打包分发 | electron-builder（`npm run dist` → dmg · `npm run dist:win` → exe） |
 
-### 安装（macOS Apple Silicon）
+### 安装
 
-从 [Releases](https://github.com/AnastasyaLiao/fpet-furina-mac-desktop-pet/releases) 页面下载 **fpet-2.2.0-arm64.dmg**，打开后把 **fpet** 拖入「应用程序」即可。
+从 [Releases](https://github.com/AnastasyaLiao/fpet-furina-mac-desktop-pet/releases) 页面下载安装包。
+
+- **macOS（Apple Silicon）**：**fpet-3.0.0-arm64.dmg**，打开后把 **fpet** 拖入「应用程序」即可。
+- **Windows（x64）**：**fpet-3.0.0-win-x64.exe**，运行后按向导安装。
 
 ### 常用交互
 
@@ -236,13 +245,24 @@ npm start        # 启动桌宠
 
 ```bash
 npm install
-npm run dist     # → dist/fpet-2.2.0-arm64.dmg
+npm run dist       # → dist/fpet-3.0.0-arm64.dmg（macOS）
+npm run dist:win   # → dist/fpet-3.0.0-win-x64.exe（Windows）
 ```
 
 ### 许可说明
 
 - **代码**：MIT License（见 LICENSE）。仅供学习交流，请勿商用。
 - **模型**：版权归 miHoYo / 画师 / 建模师所有；禁止商用、禁止盗卖、禁止二次配布（见上文[模型来源与版权](#模型来源与版权)）。
+
+---
+
+## v3.0.0 Release Notes (Pre-release)
+
+- **Windows 支持（全新平台）**：fpet 从 macOS 扩展为 **macOS + Windows 双平台**，Windows 版本功能与 macOS 几乎完全一致。
+- **复用共享代码**：采用「同一主进程 + 平台分支」架构，角色 / 记忆 / 人格演化 / 接入大模型 / 对话 / 屏幕感知 / 游戏节能 / 托盘 / 开机自启等全部复用同一套逻辑；macOS 现有代码未改动。
+- **Windows 平台适配**：系统监控（前台应用 / 窗口标题 / CPU / 电量）改用 PowerShell（`user32` / `CIM`）、屏幕截图用 Electron `desktopCapturer`、开机自启用登录启动项、全局快捷键用 `Ctrl+Shift+Q/S`、设置窗口保留系统标题栏。
+- **已知平台差异（Windows）**：点击穿透改为「光标进入窗口即可交互、移出整窗穿透」（Windows 无 macOS 像素级穿透）；音量调节 / 音量感知在 Windows 缺少原生命令行接口，暂以提示 / 未知处理。
+- **打包**：新增 `npm run dist:win` 生成 Windows NSIS 安装包 `fpet-3.0.0-win-x64.exe`；macOS 仍可 `npm run dist` 生成 `fpet-3.0.0-arm64.dmg`。
 
 ---
 

@@ -6,6 +6,14 @@ const https = require("https");
 const fs = require("fs");
 const { exec } = require("child_process");
 
+// ===== Windows 适配：同一份主进程，按平台分支。
+// ===== 所有 macOS 现有逻辑原样保留；仅当 process.platform 为 win32 时走 Windows 专属实现。
+const IS_WIN = process.platform === "win32";
+// Windows 下执行 shell 命令统一走 PowerShell；用 -EncodedCommand（UTF-16LE Base64）避免引号/特殊字符转义地狱
+const runCmd = (script) => (IS_WIN
+  ? `powershell -NoProfile -ExecutionPolicy Bypass -EncodedCommand ${Buffer.from(String(script), "utf16le").toString("base64")}`
+  : script);
+
 // ---------- 单实例锁 ----------
 // 开机自启与手动启动可能同时触发，抢同一个 8623 端口。
 // 保证任意时刻只有一个桌宠实例：后启动的实例自动退出，把控制权交给已运行的那个。
@@ -253,6 +261,25 @@ const SCREENSHOT_PATH = path.join(require("os").tmpdir(), "fpet_screen.png");
 // 截取当前屏幕，返回 data URL；无权限/失败返回 null，调用方自动降级为纯文本
 function captureScreen() {
   return new Promise((resolve) => {
+    if (IS_WIN) {
+      // Windows：用 Electron desktopCapturer 截取主屏缩略图（PowerShell/外部工具不可控，此方式最稳），返回 PNG dataURL
+      const { desktopCapturer } = require("electron");
+      const want = screen.getPrimaryDisplay().bounds;
+      desktopCapturer.getSources({
+        types: ["screen"],
+        thumbnailSize: { width: Math.floor(want.width), height: Math.floor(want.height) },
+        fetchWindowIcons: false,
+      }).then((sources) => {
+        const img = (sources && sources[0] && sources[0].thumbnail);
+        const dataUrl = img ? img.toDataURL() : null;
+        if (dataUrl && dataUrl.length > 1024) resolve(dataUrl);
+        else resolve(null);
+      }).catch((e) => {
+        writeLog("warn", "Windows 屏幕截屏失败", { error: String(e && e.message || e) });
+        resolve(null);
+      });
+      return;
+    }
     exec(`screencapture -x -t png "${SCREENSHOT_PATH}"`, { timeout: 6000 }, (err) => {
       if (err) {
         writeLog("warn", "屏幕截屏失败（可能未授予“屏幕录制”权限）", { error: String(err && err.message || err) });
@@ -825,12 +852,23 @@ function runSystemAction(line) {
   let m = L.match(/^音量\s*[:：]\s*(\d{1,3})/);
   if (m) {
     const v = Math.min(100, Math.max(0, parseInt(m[1], 10)));
+    if (IS_WIN) {
+      // Windows 无原生命令行精确调音量接口，仅提示（用户可在任务栏音量面板精确调节）
+      console.log(`[系统控制] 音量 → ${v}%（Windows 需手动调节）`);
+      return `（Windows 上请到任务栏音量面板手动把音量调到 ${v}% 哦~）`;
+    }
     exec(`osascript -e "set volume output volume ${v}"`, { timeout: 3000 }, () => {});
     console.log(`[系统控制] 音量 → ${v}%`);
     return `（已把音量调到 ${v}%）`;
   }
   m = L.match(/^勿扰\s*[:：]\s*(开|关|开启|关闭)/);
   if (m) {
+    if (IS_WIN) {
+      // Windows：打开系统「专注助手」设置页供旅行者选择
+      exec(runCmd('Start-Process "ms-settings:quietmomentshome"'), { timeout: 3000 }, () => {});
+      console.log(`[系统控制] 勿扰 → ${m[1]}（已打开专注模式设置页）`);
+      return /开/.test(m[1]) ? "（已为你打开勿扰设置，选一个专注模式吧~）" : "（已为你打开勿扰设置~）";
+    }
     // macOS 没有公开的「勿扰/专注」命令行开关，这里打开系统「专注模式」设置页供旅行者选择
     exec(`open "x-apple.systempreferences:com.apple.Focus-Settings.extension"`, { timeout: 3000 }, () => {});
     console.log(`[系统控制] 勿扰 → ${m[1]}（已打开专注模式设置页）`);
@@ -839,6 +877,14 @@ function runSystemAction(line) {
   m = L.match(/^打开\s*[:：]?\s*(.+)/);
   if (m) {
     const target = m[1].trim();
+    if (IS_WIN) {
+      // target 可能是 .exe/.lnk/.url/文件路径/网页地址；用 Start-Process 兼容打开
+      exec(runCmd(`Start-Process -FilePath "${target}" -ErrorAction SilentlyContinue`), { timeout: 5000 }, (err) => {
+        if (err) console.warn(`[系统控制] 打开「${target}」失败`, String(err));
+      });
+      console.log(`[系统控制] 打开软件 → ${target}`);
+      return `（正在打开「${target}」~）`;
+    }
     const cmd = /\.app$/.test(target) ? `open "${target}"` : `open -a "${target}"`;
     exec(cmd, { timeout: 5000 }, (err) => {
       if (err) console.warn(`[系统控制] 打开「${target}」失败`, String(err));
@@ -901,6 +947,43 @@ function extractFileName(windowTitle) {
 }
 async function getSystemInfo() {
   const cfg = readConfig();
+  // ===== Windows 采集分支：前台应用/窗口标题（user32）、CPU（Win32_Processor）、电量（Win32_Battery） =====
+  if (IS_WIN) {
+    let activeApp = "unknown", activeWindow = "";
+    const fg = await execAsync(runCmd(
+      `$sig = '[DllImport("user32.dll")] public static extern IntPtr GetForegroundWindow(); [DllImport("user32.dll")] public static extern int GetWindowText(IntPtr h, System.Text.StringBuilder s, int n); [DllImport("user32.dll")] public static extern uint GetWindowThreadProcessId(IntPtr h, out uint p);'; ` +
+      `Add-Type -MemberDefinition $sig -Name W -Namespace N -ErrorAction SilentlyContinue; ` +
+      `$h = [N.W]::GetForegroundWindow(); ` +
+      `$sb = New-Object System.Text.StringBuilder 512; [N.W]::GetWindowText($h, $sb, 512) | Out-Null; ` +
+      `$p = 0; [N.W]::GetWindowThreadProcessId($h, [ref]$p) | Out-Null; ` +
+      `$pr = Get-Process -Id $p -ErrorAction SilentlyContinue; ` +
+      `if ($pr -and $pr.ProcessName) { $pr.ProcessName + "|" + $sb.ToString() }`
+    ), 3000);
+    const fgParts = String(fg).split("|");
+    if (fgParts.length && fgParts[0].trim()) activeApp = fgParts[0].trim();
+    const wtitle = fgParts.slice(1).join("|").trim();
+    if (wtitle) activeWindow = wtitle;
+    const category = classifyApp(activeApp);
+    // 前台是桌宠自身时不把自身当作「正在使用的应用」
+    if (/electron|furidab|fpet/i.test(activeApp)) activeApp = "unknown";
+    const activeFile = category === "coding" ? extractFileName(activeWindow) : "";
+    // CPU 使用率：Win32_Processor.LoadPercentage（0~100 单值）
+    let cpuPercent = 0;
+    const cpuOut = await execAsync(runCmd("(Get-CimInstance Win32_Processor -ErrorAction SilentlyContinue).LoadPercentage"), 3000);
+    const cpu = parseFloat(cpuOut);
+    if (!isNaN(cpu)) cpuPercent = Math.round(Math.min(100, Math.max(0, cpu)));
+    // 电量：EstimatedChargeRemaining 为剩余百分比，BatteryStatus=2 表示接 AC 电源（在充电）
+    let batteryPercent = -1, charging = false;
+    const battOut = await execAsync(runCmd(
+      "$b = Get-CimInstance Win32_Battery -ErrorAction SilentlyContinue; if ($b) { $b.EstimatedChargeRemaining; $b.BatteryStatus }"
+    ), 5000);
+    const bl = String(battOut).split(/\s+/).filter(Boolean);
+    const bp = parseInt(bl[0], 10);
+    if (!isNaN(bp)) batteryPercent = bp;
+    charging = String(bl[1]).trim() === "2";
+    const lowBattery = batteryPercent >= 0 && batteryPercent <= 20 && !charging;
+    return { activeApp, category, cpuPercent, batteryPercent, charging, lowBattery, activeWindow, activeFile, volumePercent: -1 };
+  }
   // 前台活跃应用
   const appName = await execAsync(
     'osascript -e \'tell application "System Events" to get name of first application process whose frontmost is true\''
@@ -1624,6 +1707,19 @@ let gameModeActive = false;          // 当前是否处于「游戏节能」状�
 const GAME_MODE_TARGET_FPS = 23;     // 打游戏时目标帧率
 const GAME_MODE_RENDER_SCALE = 1;    // 打游戏时输出分辨率（1×，最省资源）
 async function isFrontmostFullscreen() {
+  if (IS_WIN) {
+    // Windows：前台窗口是否已最大化（覆盖最常见的全屏/视频/游戏……全屏化场景）
+    try {
+      const out = await execAsync(runCmd(
+        "Add-Type -MemberDefinition '[DllImport(\"user32.dll\")] public static extern IntPtr GetForegroundWindow();[DllImport(\"user32.dll\")] public static extern bool IsZoomed(IntPtr h);' -Name W -Namespace N -ErrorAction SilentlyContinue; " +
+        "[N.W]::IsZoomed([N.W]::GetForegroundWindow())"
+      ), 3000);
+      const s = String(out || "").trim().toLowerCase();
+      if (s === "true" || s === "yes" || s === "1") return true;
+      if (s === "false" || s === "no" || s === "0") return false;
+    } catch {}
+    return false;
+  }
   try {
     // 优先：查询 Accessibility 的 AXFullScreen 属性（若用户未给辅助权限会抛错）
     const out = await execAsync(
@@ -2252,6 +2348,10 @@ function startCursorTracking() {
         win.webContents.send("pet:chatBlur");
       }
       if (inside) cursorInsideWindow = true;
+      // Windows：无 forward 支持，改用「光标边界穿透」——进入窗口时接收鼠标事件（模型可互动），移出窗口时整窗穿透回桌面
+      if (IS_WIN) {
+        try { win.setIgnoreMouseEvents(!inside); } catch {}
+      }
     } catch {}
   }, 33);
 }
@@ -2267,6 +2367,14 @@ function stopCursorTracking() {
 ipcMain.on("pet:hover", (_event, hit) => {
   if (!win || win.isDestroyed()) return;
   try {
+    // Windows：无 forward 导致「穿透中无法感知鼠标回到模型」，穿透改由光标边界轮询控制，这里忽略模型级穿透
+    if (IS_WIN) {
+      const pp = screen.getCursorScreenPoint();
+      const bb = win.getBounds();
+      const inside = pp.x >= bb.x && pp.x <= bb.x + bb.width && pp.y >= bb.y && pp.y <= bb.y + bb.height;
+      win.setIgnoreMouseEvents(!inside);
+      return;
+    }
     win.setIgnoreMouseEvents(!hit, { forward: true });
   } catch {}
 });
@@ -2393,8 +2501,21 @@ function autoLaunchPlistContent() {
 `;
 }
 const execFileSync = (...a) => require("child_process").execFileSync(...a);
-function isAutoLaunchEnabled() { return fs.existsSync(AUTO_LAUNCH_PATH); }
+function isAutoLaunchEnabled() {
+  if (IS_WIN) { try { return !!(app.getLoginItemSettings && app.getLoginItemSettings().openAtLogin); } catch { return false; } }
+  return fs.existsSync(AUTO_LAUNCH_PATH);
+}
 function installAutoLaunch() {
+  if (IS_WIN) {
+    // Windows：写入登录启动项（注册表 HKCU\...\Run），包后指向应用 exe
+    try {
+      app.setLoginItemSettings({ openAtLogin: true, openAsHidden: false, path: process.execPath });
+      console.log("[自启] 开机自启已开启");
+    } catch (e) {
+      console.warn("[自启] 开启失败", e && e.message);
+    }
+    return;
+  }
   try {
     fs.mkdirSync(path.dirname(AUTO_LAUNCH_PATH), { recursive: true });
     fs.writeFileSync(AUTO_LAUNCH_PATH, autoLaunchPlistContent());
@@ -2406,6 +2527,15 @@ function installAutoLaunch() {
   }
 }
 function removeAutoLaunch() {
+  if (IS_WIN) {
+    try {
+      app.setLoginItemSettings({ openAtLogin: false });
+      console.log("[自启] 开机自启已关闭");
+    } catch (e) {
+      console.warn("[自启] 关闭失败", e && e.message);
+    }
+    return;
+  }
   try {
     if (fs.existsSync(AUTO_LAUNCH_PATH)) {
       try { execFileSync("launchctl", ["unload", AUTO_LAUNCH_PATH], { stdio: "ignore" }); } catch {}
@@ -2450,7 +2580,8 @@ function createWindow() {
   placeWindow(); // 若配置了手动位置则按配置定位，否则贴右下角
 
   // 点击穿透：桌宠不挡鼠标，鼠标事件转发给网页以配合视线跟随
-  win.setIgnoreMouseEvents(true, { forward: true });
+  if (IS_WIN) win.setIgnoreMouseEvents(true); // Windows 无 forward，进入窗口时由光标轮询解除穿透
+  else win.setIgnoreMouseEvents(true, { forward: true });
 
   // 显隐时启停光标跟踪，避免隐藏时白耗 CPU
   win.on("show", () => startCursorTracking());
@@ -2493,8 +2624,8 @@ function openSettingsWindow() {
     minWidth: 900,
     minHeight: 620,
     title: "fpet · 设置面板",
-    frame: false,
-    titleBarStyle: "hiddenInset", // macOS 原生红绿灯：隐藏标题文字，保留左上红/黄/绿交通灯
+    frame: !IS_WIN, // Windows 保留系统标题栏以便拖动/关闭；macOS 走无边框
+    ...(IS_WIN ? {} : { titleBarStyle: "hiddenInset" }), // macOS 原生红绿灯：隐藏标题文字，保留左上红/黄/绿交通灯
     backgroundColor: "#f4efe6",
     show: false,
     webPreferences: {
@@ -2586,13 +2717,15 @@ app.whenReady().then(async () => {
   scheduleWelcome(); // 首次启动：问候 + 最多 3 次接入大模型引导
 
   // ===== v2.0 Round4：全局快捷键（系统级，无需窗口焦点即可触发） =====
-  // Cmd+Shift+Q：快速退出桌宠
-  globalShortcut.register("Command+Shift+Q", () => {
+  // macOS：Cmd+Shift；Windows：Ctrl+Shift
+  const ACC = IS_WIN ? "Control" : "Command";
+  // Cmd/Ctrl+Shift+Q：快速退出桌宠
+  globalShortcut.register(`${ACC}+Shift+Q`, () => {
     writeLog("info", "快捷键退出", {});
     app.quit();
   });
-  // Cmd+Shift+S：快速打开设置面板
-  globalShortcut.register("Command+Shift+S", () => {
+  // Cmd/Ctrl+Shift+S：快速打开设置面板
+  globalShortcut.register(`${ACC}+Shift+S`, () => {
     openSettingsWindow();
   });
 });

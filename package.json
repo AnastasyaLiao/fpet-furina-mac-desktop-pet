@@ -1,6 +1,6 @@
 {
   "name": "fpet",
-  "version": "2.2.0",
+  "version": "3.0.0",
   "description": "fpet —— 芙宁娜桌面宠物（透明、无边框、常驻屏幕右下角），支持接入自己的 DeepSeek / Ollama 大模型，可开启屏幕感知读取当前画面",
   "main": "electron/main.js",
   "author": "AnastasyaLiao",
@@ -8,7 +8,8 @@
   "license": "MIT",
   "scripts": {
     "start": "cd electron && npm start",
-    "dist": "electron-builder --mac dmg"
+    "dist": "electron-builder --mac dmg --publish never",
+    "dist:win": "electron-builder --win nsis --publish never"
   },
   "devDependencies": {
     "electron-builder": "^26.0.12"
@@ -52,6 +53,20 @@
         { "x": 130, "y": 180 },
         { "x": 410, "y": 180, "type": "link", "path": "/Applications" }
       ]
+    },
+    "win": {
+      "target": [
+        { "target": "nsis", "arch": ["x64"] }
+      ],
+      "icon": "build/icon.png",
+      "artifactName": "fpet-${version}-win-${arch}.${ext}"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "fpet"
     }
   }
 }
