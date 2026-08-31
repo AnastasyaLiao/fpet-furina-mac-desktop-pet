@@ -460,26 +460,49 @@
             .actions-bar .bar-row { gap: 10px; }
             .actions-bar .btn-primary, .actions-bar .btn-secondary { height: 40px; font-size: 13px; }
         }
+
+        /* ===== 语言切换 ===== */
+        .lang-switch {
+            display: inline-flex;
+            gap: 2px;
+            margin: 10px 0 2px;
+            font-size: 11px;
+            border: 1px solid var(--line);
+            border-radius: 999px;
+            overflow: hidden;
+            width: fit-content;
+        }
+        .lang-switch a {
+            padding: 3px 12px;
+            color: var(--muted);
+            cursor: pointer;
+            user-select: none;
+            text-decoration: none;
+            transition: all 0.2s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+        .lang-switch a:hover { color: var(--ink); }
+        .lang-switch a.active { background: var(--accent-soft); color: var(--accent-dark); font-weight: 700; }
     </style>
 </head>
 <body>
     <main>
         <!-- 左侧导航 -->
         <aside class="sidebar">
-            <h1>桌面宠物<br>设置面板</h1>
-            <span class="badge">v2.0 · 提瓦特</span>
+            <h1 data-i18n="sidebar.title">桌面宠物<br>设置面板</h1>
+            <span class="badge">v2.1 · 提瓦特</span>
+            <span class="lang-switch"><a data-lang="en" class="active">EN</a><a data-lang="zh">中文</a></span>
             <nav>
-                <a href="#sec-llm" class="active">AI 对话接入</a>
-                <a href="#sec-model">角色模型</a>
-                <a href="#sec-render">外观与渲染</a>
-                <a href="#sec-switch">开关与模式</a>
-                <a href="#sec-prompt">人设定制</a>
-                <a href="#sec-band">部位判定</a>
-                <a href="#sec-debug">记忆与调试</a>
-                <a href="#sec-chat">聊天测试</a>
+                <a href="#sec-llm" class="active" data-i18n="nav.ai">AI 对话接入</a>
+                <a href="#sec-model" data-i18n="nav.model">角色模型</a>
+                <a href="#sec-render" data-i18n="nav.render">外观与渲染</a>
+                <a href="#sec-switch" data-i18n="nav.switch">开关与模式</a>
+                <a href="#sec-prompt" data-i18n="nav.prompt">人设定制</a>
+                <a href="#sec-band" data-i18n="nav.band">部位判定</a>
+                <a href="#sec-debug" data-i18n="nav.debug">记忆与调试</a>
+                <a href="#sec-chat" data-i18n="nav.chat">聊天测试</a>
             </nav>
             <div class="version-info">
-                版本 2.0.0<br>
+                <span data-i18n="version.line">版本 2.1.0</span><br>
                 作者 AnastasyaLiao<br>
                 Live2D Cubism SDK 6.0
             </div>
@@ -490,48 +513,48 @@
             <form id="form">
                 <!-- ===== AI 对话接入 ===== -->
                 <section class="card" id="sec-llm">
-                    <div class="card-title"><span class="icon">AI</span>接入大模型 · AI 对话</div>
-                    <div class="info-band">桌宠的对话由大模型驱动。请填入「你自己的」API 配置（不会内置任何密钥）。支持接入 DeepSeek 与 Ollama（本机本地大模型）；凡支持 OpenAI 兼容接口的服务也基本可接入。</div>
+                    <div class="card-title"><span class="icon">AI</span><span data-i18n="llm.title">接入大模型 · AI 对话</span></div>
+                    <div class="info-band" data-i18n="llm.info">桌宠的对话由大模型驱动。请填入「你自己的」API 配置（不会内置任何密钥）。支持接入 DeepSeek 与 Ollama（本机本地大模型）；凡支持 OpenAI 兼容接口的服务也基本可接入。</div>
                     <div class="field">
-                        <label for="llmProvider">服务商 / 类型</label>
+                        <label for="llmProvider" data-i18n="llm.provider.label">服务商 / 类型</label>
                         <select id="llmProvider">
-                            <option value="deepseek">DeepSeek（云端 API）</option>
-                            <option value="ollama">Ollama（本地模型）</option>
+                            <option value="deepseek" data-i18n="llm.provider.opt.deepseek">DeepSeek（云端 API）</option>
+                            <option value="ollama" data-i18n="llm.provider.opt.ollama">Ollama（本地模型）</option>
                         </select>
                     </div>
                     <div class="field" id="deepseekFields">
                         <label for="apiKey">DeepSeek API Key</label>
-                        <input type="password" id="apiKey" placeholder="sk-…（提交后仅保存于本机 config.json）" autocomplete="off" />
-                        <div class="hint">在 DeepSeek 开放平台创建并记账充值后获取</div>
-                        <label for="baseUrl" style="margin-top:10px">接口地址（一般无需改）</label>
+                        <input type="password" id="apiKey" placeholder="sk-…" autocomplete="off" data-i18n-ph="llm.apikey.ph" />
+                        <div class="hint" data-i18n="llm.apikey.hint">在 DeepSeek 开放平台创建并记账充值后获取</div>
+                        <label for="baseUrl" style="margin-top:10px" data-i18n="llm.baseurl.label">接口地址（一般无需改）</label>
                         <input type="text" id="baseUrl" placeholder="https://api.deepseek.com/v1" />
-                        <label for="model" style="margin-top:10px">模型名（一般无需改）</label>
+                        <label for="model" style="margin-top:10px" data-i18n="llm.model.label">模型名（一般无需改）</label>
                         <input type="text" id="model" placeholder="deepseek-chat" />
                     </div>
                     <div class="field" id="ollamaFields" style="display:none">
-                        <label for="ollamaUrl">Ollama 服务地址</label>
+                        <label for="ollamaUrl" data-i18n="llm.ollamaui.label">Ollama 服务地址</label>
                         <input type="text" id="ollamaUrl" placeholder="http://127.0.0.1:11434" />
-                        <div class="hint">需先在本机运行 Ollama 并已拉取对应模型（命令：ollama pull 模型名）</div>
-                        <label for="ollamaModel" style="margin-top:10px">模型名</label>
+                        <div class="hint" data-i18n="llm.ollamaui.hint">需先在本机运行 Ollama 并已拉取对应模型（命令：ollama pull 模型名）</div>
+                        <label for="ollamaModel" style="margin-top:10px" data-i18n="llm.ollamamodel.label">模型名</label>
                         <input type="text" id="ollamaModel" placeholder="qwen2.5:7b" />
                     </div>
                     <div class="row">
-                        <button type="button" class="btn btn-primary" id="testLLM">测试连接</button>
-                        <button type="button" class="btn btn-primary" id="saveLLM">保存接入</button>
+                        <button type="button" class="btn btn-primary" id="testLLM" data-i18n="llm.test">测试连接</button>
+                        <button type="button" class="btn btn-primary" id="saveLLM" data-i18n="llm.save">保存接入</button>
                     </div>
                     <p id="llmStatus" role="status"></p>
                 </section>
 
                 <!-- ===== 角色模型 ===== -->
                 <section class="card" id="sec-model">
-                    <div class="card-title"><span class="icon">🎭</span>角色模型选择</div>
-                    <div class="card-desc">切换桌宠角色，每个角色有独立的性格与人设。切换后程序自动重启加载新模型。下拉菜单标注了「有动画/无动画」和表情数量。</div>
+                    <div class="card-title"><span class="icon">🎭</span><span data-i18n="model.title">角色模型选择</span></div>
+                    <div class="card-desc" data-i18n="model.desc">切换桌宠角色，每个角色有独立的性格与人设。切换后程序自动重启加载新模型。下拉菜单标注了「有动画/无动画」和表情数量。</div>
                     <div class="switch-row">
                         <div style="flex:1;">
-                            <div class="lbl">选择角色</div>
+                            <div class="lbl" data-i18n="model.choose">选择角色</div>
                             <div class="desc">芙宁娜、胡桃、纳西妲、甘雨、芭芭拉、菈乌玛、奈芙尔、丝柯克</div>
                             <select id="modelPath" style="margin-top:8px;width:100%;padding:8px 12px;border-radius:8px;border:1px solid var(--line);background:#fbfaf6;color:var(--ink);font-size:14px;font-family:inherit;">
-                                <option value="models/芙宁娜">芙宁娜（默认）</option>
+                                <option value="models/芙宁娜" data-i18n="model.option.default">芙宁娜（默认）</option>
                             </select>
                         </div>
                     </div>
@@ -539,80 +562,81 @@
 
                 <!-- ===== 外观与渲染 ===== -->
                 <section class="card" id="sec-render">
-                    <div class="card-title"><span class="icon">🎨</span>外观与渲染</div>
-                    <div class="card-desc">调整桌宠整体大小、位置、物理强度、清晰度、透明度和帧率。保存后桌宠自动重新加载，立即生效。</div>
+                    <div class="card-title"><span class="icon">🎨</span><span data-i18n="render.title">外观与渲染</span></div>
+                    <div class="card-desc" data-i18n="render.desc">调整桌宠整体大小、位置、物理强度、清晰度、透明度和帧率。保存后桌宠自动重新加载，立即生效。</div>
                     <div class="field">
-                        <label for="scale">整体缩放：<span id="scalev" style="font-weight:700">100</span>%</label>
+                        <label for="scale" data-i18n="render.scale">整体缩放：<span id="scalev" style="font-weight:700"></span>%</label>
                         <input type="range" id="scale" min="30" max="150" step="1" value="100" />
-                        <div class="hint">100% 为默认大小，最小 30%、最大 150%。宽高同步变化、绝不变形。</div>
+                        <div class="hint" data-i18n="render.scale.hint">100% 为默认大小，最小 30%、最大 150%。宽高同步变化、绝不变形。</div>
                     </div>
                     <div class="field">
-                        <label for="px">窗口位置 X：<span id="pxv" style="font-weight:700">…</span> px</label>
+                        <label for="px" data-i18n="render.px">窗口位置 X：<span id="pxv" style="font-weight:700"></span> px</label>
                         <input type="range" id="px" step="1" />
-                        <div class="hint">拖动滑块可实时移动桌宠（范围 = 当前屏幕工作区）</div>
+                        <div class="hint" data-i18n="render.pos.hint">拖动滑块可实时移动桌宠（范围 = 当前屏幕工作区）</div>
                     </div>
                     <div class="field">
-                        <label for="py">窗口位置 Y：<span id="pyv" style="font-weight:700">…</span> px</label>
+                        <label for="py" data-i18n="render.py">窗口位置 Y：<span id="pyv" style="font-weight:700"></span> px</label>
                         <input type="range" id="py" step="1" />
-                        <div class="hint">拖动滑块可实时移动桌宠（范围 = 当前屏幕工作区）</div>
+                        <div class="hint" data-i18n="render.pos.hint">拖动滑块可实时移动桌宠（范围 = 当前屏幕工作区）</div>
                     </div>
                     <div class="field">
-                        <label for="ps">物理强度：<span id="psv" style="font-weight:700">1.0</span> 倍</label>
+                        <label for="ps" data-i18n="render.ps">物理强度：<span id="psv" style="font-weight:700"></span> 倍</label>
                         <input type="range" id="ps" min="0.1" max="5" step="0.1" value="1" />
-                        <div class="hint">数值越大，衣服/头发在待机时的物理飘动越明显</div>
+                        <div class="hint" data-i18n="render.ps.hint">数值越大，衣服/头发在待机时的物理飘动越明显</div>
                     </div>
                     <div class="field">
-                        <label for="rs">输出清晰度：<span id="rsv" style="font-weight:700">1.0</span>×</label>
+                        <label for="rs" data-i18n="render.rs">输出清晰度：<span id="rsv" style="font-weight:700"></span>×</label>
                         <input type="range" id="rs" min="1" max="2" step="0.1" value="1" />
-                        <div class="hint">数值越大，模型内部渲染分辨率越高、边缘越清晰，也更耗性能</div>
+                        <div class="hint" data-i18n="render.rs.hint">数值越大，模型内部渲染分辨率越高、边缘越清晰，也更耗性能</div>
                     </div>
                     <div class="field">
-                        <label for="opacity">模型透明度：<span id="opacityv" style="font-weight:700">100</span>%</label>
+                        <label for="opacity" data-i18n="render.opacity">模型透明度：<span id="opacityv" style="font-weight:700"></span>%</label>
                         <input type="range" id="opacity" min="10" max="100" step="1" value="100" />
-                        <div class="hint">调节桌宠模型的整体不透明度（10%~100%），可与桌面壁纸更好地融合</div>
+                        <div class="hint" data-i18n="render.opacity.hint">调节桌宠模型的整体不透明度（10%~100%），可与桌面壁纸更好地融合</div>
                     </div>
                     <div class="field">
-                        <label for="targetFps">目标帧率：<span id="targetFpsVal" style="font-weight:700;color:var(--accent-dark);">60</span> fps</label>
+                        <label for="targetFps" data-i18n="render.fps">目标帧率：<span id="targetFpsVal" style="font-weight:700;color:var(--accent-dark);"></span> fps</label>
                         <input type="range" id="targetFps" min="15" max="120" step="1" value="60" />
-                        <div class="hint">稳定渲染帧率。默认 60fps 流畅运行，降低可省 CPU/功耗。范围 15~120。</div>
+                        <div class="hint" data-i18n="render.fps.hint">稳定渲染帧率。默认 60fps 流畅运行，降低可省 CPU/功耗。范围 15~120。</div>
+                    </div>
                     </div>
                 </section>
 
                 <!-- ===== 开关与模式 ===== -->
                 <section class="card" id="sec-switch">
-                    <div class="card-title"><span class="icon">⚙</span>开关与模式</div>
+                    <div class="card-title"><span class="icon">⚙</span><span data-i18n="switch.title">开关与模式</span></div>
                     <div class="switch-row">
                         <div>
-                            <div class="lbl">静音模式</div>
-                            <div class="desc">开启后，桌宠不再显示任何聊天气泡/情绪台词，只保留 Live2D 动画与表情。适合纯动画观赏或安静工作场景。</div>
+                            <div class="lbl" data-i18n="switch.muted">静音模式</div>
+                            <div class="desc" data-i18n="switch.muted.desc">开启后，桌宠不再显示任何聊天气泡/情绪台词，只保留 Live2D 动画与表情。适合纯动画观赏或安静工作场景。</div>
                         </div>
                         <input type="checkbox" id="muted" />
                     </div>
                     <div class="switch-row">
                         <div>
-                            <div class="lbl">音量感知情绪反馈</div>
-                            <div class="desc">开启后，桌宠会定期读取 macOS 系统输出音量做反应：大音量 → 欢快表情；静音 → 安静陪伴表情。</div>
+                            <div class="lbl" data-i18n="switch.volume">音量感知情绪反馈</div>
+                            <div class="desc" data-i18n="switch.volume.desc">开启后，桌宠会定期读取 macOS 系统输出音量做反应：大音量 → 欢快表情；静音 → 安静陪伴表情。</div>
                         </div>
                         <input type="checkbox" id="volumeSense" checked />
                     </div>
                     <div class="switch-row">
                         <div>
-                            <div class="lbl">全屏应用自动隐藏</div>
-                            <div class="desc">开启后检测到全屏游戏/视频时桌宠自动隐藏，退出全屏立即恢复。避免遮挡画面。</div>
+                            <div class="lbl" data-i18n="switch.hide">全屏应用自动隐藏</div>
+                            <div class="desc" data-i18n="switch.hide.desc">开启后检测到全屏游戏/视频时桌宠自动隐藏，退出全屏立即恢复。避免遮挡画面。</div>
                         </div>
                         <input type="checkbox" id="autoHideFullscreen" />
                     </div>
                     <div class="switch-row">
                         <div>
-                            <div class="lbl">联网搜索</div>
-                            <div class="desc">开启后对话时自动联网搜索补充信息。需要能访问 DuckDuckGo/Wikipedia（国内需梯子），无梯子请保持关闭。</div>
+                            <div class="lbl" data-i18n="switch.web">联网搜索</div>
+                            <div class="desc" data-i18n="switch.web.desc">开启后对话时自动联网搜索补充信息。需要能访问 DuckDuckGo/Wikipedia（国内需梯子），无梯子请保持关闭。</div>
                         </div>
                         <input type="checkbox" id="webSearchEnabled" />
                     </div>
                     <div class="switch-row">
                         <div>
-                            <div class="lbl">屏幕感知（读取当前画面）</div>
-                            <div class="desc">开启后，对话时会把当前屏幕截图一起发给所接入的大模型，让它能“看到”你正在看的代码 / 网页 / 应用，从而更好地理解并回答你（如写代码时读懂你的代码、看网页时读懂页面）。开启时会询问授权。请放心：本软件<b>不会上传任何数据到任何数据库</b>，所有操作都在本地完成，仅把信息发送给你自己配置的大模型 API。首次使用需在【系统设置→隐私与安全性→屏幕录制】中允许，建议搭配支持图片的多模态模型使用，可随时关闭。</div>
+                            <div class="lbl" data-i18n="switch.screen">屏幕感知（读取当前画面）</div>
+                            <div class="desc" data-i18n="switch.screen.desc">开启后，对话时会把当前屏幕截图一起发给所接入的大模型，让它能“看到”你正在看的代码 / 网页 / 应用，从而更好地理解并回答你（如写代码时读懂你的代码、看网页时读懂页面）。开启时会询问授权。请放心：本软件<b>不会上传任何数据到任何数据库</b>，所有操作都在本地完成，仅把信息发送给你自己配置的大模型 API。首次使用需在【系统设置→隐私与安全性→屏幕录制】中允许，建议搭配支持图片的多模态模型使用，可随时关闭。</div>
                         </div>
                         <input type="checkbox" id="screenSense" />
                     </div>
@@ -620,87 +644,85 @@
 
                 <!-- ===== 人设定制 ===== -->
                 <section class="card" id="sec-prompt">
-                    <div class="card-title"><span class="icon">✦</span>人设定制（System Prompt）</div>
-                    <div class="info-band">
-                        留空即使用内置角色人设（含全局固定框架）。自定义时建议保留：①自称方式 ②回复长度限制 ③情绪标签规则（第一行（情绪名）），保证表情+气泡格式正常工作。
+                    <div class="card-title"><span class="icon">✦</span><span data-i18n="prompt.title">人设定制（System Prompt）</span></div>
+                    <div class="info-band" data-i18n="prompt.info">留空即使用内置角色人设（含全局固定框架）。自定义时建议保留：①自称方式 ②回复长度限制 ③情绪标签规则（第一行（情绪名）），保证表情+气泡格式正常工作。</div>
+                    <div class="field">
+                        <label for="systemPrompt" data-i18n="prompt.chat">聊天对话人设</label>
+                        <textarea id="systemPrompt" data-i18n-ph="prompt.chat.ph" placeholder="留空使用内置角色人设。用于正式聊天（双击模型输入框发送消息）。"></textarea>
+                        <div class="hint" data-i18n="prompt.chat.hint">可写入性格、自称、世界观、回复规则等。保存后立即作为大模型系统提示生效。</div>
                     </div>
                     <div class="field">
-                        <label for="systemPrompt">聊天对话人设</label>
-                        <textarea id="systemPrompt" placeholder="留空使用内置角色人设。用于正式聊天（双击模型输入框发送消息）。"></textarea>
-                        <div class="hint">可写入性格、自称、世界观、回复规则等。保存后立即作为大模型系统提示生效。</div>
+                        <label for="moodPrompt" data-i18n="prompt.mood">悬停情绪话 Prompt</label>
+                        <textarea id="moodPrompt" data-i18n-ph="prompt.mood.ph" placeholder="留空使用默认。鼠标移到模型身上时，桌宠会随机说一句 20 字以内的短句。"></textarea>
+                        <div class="hint" data-i18n="prompt.mood.hint">用于鼠标悬停时的搭话。建议：20 字以内、每次不同。</div>
                     </div>
                     <div class="field">
-                        <label for="moodPrompt">悬停情绪话 Prompt</label>
-                        <textarea id="moodPrompt" placeholder="留空使用默认。鼠标移到模型身上时，桌宠会随机说一句 20 字以内的短句。"></textarea>
-                        <div class="hint">用于鼠标悬停时的搭话。建议：20 字以内、每次不同。</div>
-                    </div>
-                    <div class="field">
-                        <label for="touchPrompt">触碰反馈 Prompt 前缀</label>
-                        <textarea id="touchPrompt" placeholder="留空使用默认。用于点击模型各部位的撒娇反馈，此处仅用于覆写前缀人设基调。"></textarea>
-                        <div class="hint">建议写入人设风格、自称口吻等基调性描述，不用写具体部位要求。</div>
+                        <label for="touchPrompt" data-i18n="prompt.touch">触碰反馈 Prompt 前缀</label>
+                        <textarea id="touchPrompt" data-i18n-ph="prompt.touch.ph" placeholder="留空使用默认。用于点击模型各部位的撒娇反馈，此处仅用于覆写前缀人设基调。"></textarea>
+                        <div class="hint" data-i18n="prompt.touch.hint">建议写入人设风格、自称口吻等基调性描述，不用写具体部位要求。</div>
                     </div>
                 </section>
 
                 <!-- ===== 部位判定 ===== -->
                 <section class="card" id="sec-band">
-                    <div class="card-title"><span class="icon">⊕</span>部位点击判定</div>
-                    <div class="info-band">拖动下方分界线，可自定义点击模型不同部位（头 / 胸 / 腰 / 私处 / 腿 / 脚）的反馈范围。数值 = 分界点占模型画布高度的百分比，从上到下依次递增。</div>
+                    <div class="card-title"><span class="icon">⊕</span><span data-i18n="band.title">部位点击判定</span></div>
+                    <div class="info-band" data-i18n="band.info">拖动下方分界线，可自定义点击模型不同部位（头 / 胸 / 腰 / 私处 / 腿 / 脚）的反馈范围。数值 = 分界点占模型画布高度的百分比，从上到下依次递增。</div>
                     <div class="field">
-                        <label for="bHead">头部分界：<span id="bHeadv" style="font-weight:700">25</span>%</label>
+                        <label for="bHead" data-i18n="band.head">头部分界：<span id="bHeadv" style="font-weight:700"></span>%</label>
                         <input type="range" id="bHead" min="0" max="40" step="1" value="25" />
-                        <div class="hint">0% ~ 此值 判为「头」（摸头反馈）</div>
+                        <div class="hint" data-i18n="band.head.hint">0% ~ 此值 判为「头」（摸头反馈）</div>
                     </div>
                     <div class="field">
-                        <label for="bChest">胸部分界：<span id="bChestv" style="font-weight:700">34</span>%</label>
+                        <label for="bChest" data-i18n="band.chest">胸部分界：<span id="bChestv" style="font-weight:700"></span>%</label>
                         <input type="range" id="bChest" min="5" max="55" step="1" value="34" />
-                        <div class="hint">头部分界 ~ 此值 判为「胸」</div>
+                        <div class="hint" data-i18n="band.chest.hint">头部分界 ~ 此值 判为「胸」</div>
                     </div>
                     <div class="field">
-                        <label for="bWaist">腰部分界：<span id="bWaistv" style="font-weight:700">45</span>%</label>
+                        <label for="bWaist" data-i18n="band.waist">腰部分界：<span id="bWaistv" style="font-weight:700"></span>%</label>
                         <input type="range" id="bWaist" min="10" max="65" step="1" value="45" />
-                        <div class="hint">胸部分界 ~ 此值 判为「腰」</div>
+                        <div class="hint" data-i18n="band.waist.hint">胸部分界 ~ 此值 判为「腰」</div>
                     </div>
                     <div class="field">
-                        <label for="bPriv">私处分界：<span id="bPrivv" style="font-weight:700">55</span>%</label>
+                        <label for="bPriv" data-i18n="band.priv">私处分界：<span id="bPrivv" style="font-weight:700"></span>%</label>
                         <input type="range" id="bPriv" min="20" max="75" step="1" value="55" />
-                        <div class="hint">腰部分界 ~ 此值 判为「私处」</div>
+                        <div class="hint" data-i18n="band.priv.hint">腰部分界 ~ 此值 判为「私处」</div>
                     </div>
                     <div class="field">
-                        <label for="bFoot">脚部分界：<span id="bFootv" style="font-weight:700">60</span>%</label>
+                        <label for="bFoot" data-i18n="band.foot">脚部分界：<span id="bFootv" style="font-weight:700"></span>%</label>
                         <input type="range" id="bFoot" min="45" max="100" step="1" value="60" />
-                        <div class="hint">私处分界 ~ 此值 判为「腿」，此值 ~ 100% 判为「脚」</div>
+                        <div class="hint" data-i18n="band.foot.hint">私处分界 ~ 此值 判为「腿」，此值 ~ 100% 判为「脚」</div>
                     </div>
                 </section>
 
                 <!-- ===== 记忆与调试 ===== -->
                 <section class="card" id="sec-debug">
-                    <div class="card-title"><span class="icon">🔧</span>记忆与调试</div>
+                    <div class="card-title"><span class="icon">🔧</span><span data-i18n="debug.title">记忆与调试</span></div>
                     <div id="memoryPanel">
-                        <div>角色记忆档案</div>
-                        <div id="memoryContent">加载中…</div>
-                        <button type="button" id="btnResetMemory" class="btn btn-ghost" style="margin-top:10px;">重置当前角色记忆</button>
+                        <div data-i18n="debug.mem.title">角色记忆档案</div>
+                        <div id="memoryContent" data-i18n="dyn.loading">加载中…</div>
+                        <button type="button" id="btnResetMemory" class="btn btn-ghost" style="margin-top:10px;" data-i18n="debug.reset">重置当前角色记忆</button>
                     </div>
                     <div class="row" style="gap:10px; flex-wrap:wrap; margin-top:14px;">
-                        <button type="button" id="btnExportLog" class="btn btn-secondary" style="flex:1 1 180px;">导出调试日志</button>
-                        <button type="button" id="btnOpenLogs" class="btn btn-ghost" style="flex:1 1 160px;">打开日志目录</button>
+                        <button type="button" id="btnExportLog" class="btn btn-secondary" style="flex:1 1 180px;" data-i18n="debug.export">导出调试日志</button>
+                        <button type="button" id="btnOpenLogs" class="btn btn-ghost" style="flex:1 1 160px;" data-i18n="debug.open">打开日志目录</button>
                     </div>
                     <div class="info-band" style="margin-top:12px;">
-                        <b>导出日志</b>：一键把版本信息、系统状态、LLM 接口请求/报错、配置变更记录（含脱敏 Key）打包成 .txt。<br>
-                        <b>自动恢复</b>：如果 config.json 被意外损坏，程序不会崩溃，自动备份并重置为出厂默认。
+                        <b data-i18n="debug.info.expTitle">导出日志</b>：<span data-i18n="debug.info.expDesc">一键把版本信息、系统状态、LLM 接口请求/报错、配置变更记录（含脱敏 Key）打包成 .txt。</span><br>
+                        <b data-i18n="debug.info.recTitle">自动恢复</b>：<span data-i18n="debug.info.recDesc">如果 config.json 被意外损坏，程序不会崩溃，自动备份并重置为出厂默认。</span>
                     </div>
                     <div id="resetBanner" class="status err" style="display:none;">
-                        <b>配置已自动重置</b>：config.json 解析失败，已备份为 <code>config.json.bak</code> 并恢复出厂默认。请重新设置个性化参数。
+                        <b data-i18n="debug.banner.title">配置已自动重置</b>：<span data-i18n="debug.banner.desc">config.json 解析失败，已备份为 <code>config.json.bak</code> 并恢复出厂默认。请重新设置个性化参数。</span>
                     </div>
                 </section>
 
                 <!-- ===== 聊天测试 ===== -->
                 <section class="card" id="sec-chat">
-                    <div class="card-title"><span class="icon">💬</span>聊天测试</div>
-                    <div class="card-desc">由你所接入的大模型驱动，回复会同步显示在桌宠的气泡里。</div>
+                    <div class="card-title"><span class="icon">💬</span><span data-i18n="chat.title">聊天测试</span></div>
+                    <div class="card-desc" data-i18n="chat.desc">由你所接入的大模型驱动，回复会同步显示在桌宠的气泡里。</div>
                     <div class="chat-area" style="margin-top:0;padding-top:0;border-top:none;">
                         <div class="row">
-                            <input type="text" id="chatInput" placeholder="想对桌宠说点什么…" maxlength="300" />
-                            <button type="button" class="btn-send" id="chatSend">发送</button>
+                            <input type="text" id="chatInput" data-i18n-ph="chat.ph" placeholder="想对桌宠说点什么…" maxlength="300" />
+                            <button type="button" class="btn-send" id="chatSend" data-i18n="chat.send">发送</button>
                         </div>
                         <div id="chatlog"></div>
                     </div>
@@ -710,9 +732,9 @@
                 <div class="actions-bar">
                     <div class="bar-status" id="status" role="status"></div>
                     <div class="bar-row">
-                        <button type="submit" class="btn btn-primary" id="save">保存并生效</button>
-                        <button type="button" class="btn btn-ghost" id="resetModel" title="将当前角色的所有设置恢复为出厂默认（位置自动贴右下角、缩放100%）">恢复默认</button>
-                        <button type="button" class="btn btn-secondary" id="dock">贴回右下角</button>
+                        <button type="submit" class="btn btn-primary" id="save" data-i18n="bar.save">保存并生效</button>
+                        <button type="button" class="btn btn-ghost" id="resetModel" data-i18n-title="bar.reset.title" title="将当前角色的所有设置恢复为出厂默认（位置自动贴右下角、缩放100%）" data-i18n="bar.reset">恢复默认</button>
+                        <button type="button" class="btn btn-secondary" id="dock" data-i18n="bar.dock">贴回右下角</button>
                     </div>
                 </div>
             </form>
@@ -720,6 +742,274 @@
     </main>
 
     <script>
+        // ================= 设置页 i18n（中文 / 英文，默认英文） =================
+        const I18N = {
+            en: {
+                "sidebar.title": "Desktop Pet<br>Settings",
+                "nav.ai": "AI &amp; Chat", "nav.model": "Character Model", "nav.render": "Appearance &amp; Rendering",
+                "nav.switch": "Toggles &amp; Modes", "nav.prompt": "Persona Custom", "nav.band": "Touch Zones",
+                "nav.debug": "Memory &amp; Debug", "nav.chat": "Chat Test", "version.line": "Version 2.1.0",
+                "llm.title": "LLM Integration · AI Chat",
+                "llm.info": "The pet's chat is driven by a large model. Fill in <b>your own</b> API (no keys are bundled). DeepSeek and Ollama (local) are supported; any OpenAI-compatible service basically works.",
+                "llm.provider.label": "Provider / Type",
+                "llm.provider.opt.deepseek": "DeepSeek (Cloud API)", "llm.provider.opt.ollama": "Ollama (Local Model)",
+                "llm.apikey.ph": "sk-… (stored locally in config.json only)",
+                "llm.apikey.hint": "Create &amp; top up on the DeepSeek Open Platform to get it",
+                "llm.baseurl.label": "API Base URL (usually no change)", "llm.model.label": "Model Name (usually no change)",
+                "llm.ollamaui.label": "Ollama Service URL", "llm.ollamaui.hint": "Run Ollama locally first and have pulled the model (command: ollama pull &lt;model&gt;)",
+                "llm.ollamamodel.label": "Model Name",
+                "llm.test": "Test Connection", "llm.save": "Save &amp; Connect",
+                "model.title": "Character Model", "model.desc": "Switch the pet's character; each has a separate personality and persona. The app restarts to load the new model. The menu labels animated/non-animated and expression count.",
+                "model.choose": "Choose character", "model.option.default": "Furina (default)",
+                "render.title": "Appearance &amp; Rendering",
+                "render.desc": "Adjust the pet's overall size, position, physics strength, sharpness, opacity and frame rate. The pet reloads instantly after saving.",
+                "render.scale": "Overall scale: <span id='scalev' style='font-weight:700'></span>%",
+                "render.scale.hint": "100% is the default; min 30%, max 150%. Width and height change together, never distorted.",
+                "render.px": "Window position X: <span id='pxv' style='font-weight:700'></span> px",
+                "render.py": "Window position Y: <span id='pyv' style='font-weight:700'></span> px",
+                "render.pos.hint": "Drag the slider to move the pet in real time (range = current screen work area)",
+                "render.ps": "Physics strength: <span id='psv' style='font-weight:700'></span>×",
+                "render.ps.hint": "Higher value makes clothes/hair sway more noticeably when idle",
+                "render.rs": "Output sharpness: <span id='rsv' style='font-weight:700'></span>×",
+                "render.rs.hint": "Higher = more internal render resolution and crisper edges, but more performance cost",
+                "render.opacity": "Model opacity: <span id='opacityv' style='font-weight:700'></span>%",
+                "render.opacity.hint": "Adjust the pet's overall opacity (10%~100%) to blend better with your wallpaper",
+                "render.fps": "Target FPS: <span id='targetFpsVal' style='font-weight:700;color:var(--accent-dark);'></span> fps",
+                "render.fps.hint": "Stable render FPS. 60 is smooth by default; lower saves CPU/power. Range 15~120.",
+                "switch.title": "Toggles &amp; Modes",
+                "switch.muted": "Mute Mode", "switch.muted.desc": "Show no chat bubbles / emotion lines, keeping only Live2D animation and expressions. Good for pure animation or quiet work.",
+                "switch.volume": "Volume-Aware Emotion", "switch.volume.desc": "Periodically reads macOS output volume: loud → cheerful, muted → calm companion expression.",
+                "switch.hide": "Auto-hide in fullscreen", "switch.hide.desc": "Hides the pet when a fullscreen game/video is detected and restores it immediately on exit.",
+                "switch.web": "Web Search", "switch.web.desc": "Automatically web-searches during chat when fresh info is needed. Requires access to DuckDuckGo/Wikipedia (VPN needed in mainland China).",
+                "switch.screen": "Screen Awareness (read current screen)",
+                "switch.screen.desc": "When enabled, the current screen is captured and sent with your message to the LLM so it can actually &quot;see&quot; the code / webpage / app you're looking at and answer better. You'll be asked for permission. Please rest assured: this app <b>uploads no data to any database</b> — everything is processed locally, only sent to the LLM API you configured yourself. Requires macOS Screen Recording permission; best paired with a vision-capable model. Turn it off anytime.",
+                "prompt.title": "Persona (System Prompt)",
+                "prompt.info": "Leave blank to use the built-in persona. When customizing, keep: ① how it addresses itself ② reply-length limit ③ emotion-tag rule (first line (emotion name)) so the expression+bubble format still works.",
+                "prompt.chat": "Chat persona", "prompt.chat.ph": "Blank uses built-in persona. For normal chat (double-click the model to open the input).",
+                "prompt.chat.hint": "Write personality, self-address, worldview, reply rules, etc. Takes effect immediately as the system prompt.",
+                "prompt.mood": "Hover mood prompt", "prompt.mood.ph": "Blank uses default. When hovering the model, the pet says a random short line within 20 chars.",
+                "prompt.mood.hint": "For hover talk. Suggestion: within 20 chars, vary each time.",
+                "prompt.touch": "Touch reply prompt prefix", "prompt.touch.ph": "Blank uses default. For petting feedback on each body part; here only to override the persona tone prefix.",
+                "prompt.touch.hint": "Write persona style, self-address tone, etc. No need to describe specific body parts.",
+                "band.title": "Touch Zones", "band.info": "Drag the sliders to customize the click zones (head / chest / waist / priv / legs / feet). Value = boundary as % of canvas height, increasing top to bottom.",
+                "band.head": "Head boundary: <span id='bHeadv' style='font-weight:700'></span>%",
+                "band.head.hint": "0% ~ this value is judged as &quot;head&quot; (head-pat feedback)",
+                "band.chest": "Chest boundary: <span id='bChestv' style='font-weight:700'></span>%",
+                "band.chest.hint": "head boundary ~ this value is &quot;chest&quot;",
+                "band.waist": "Waist boundary: <span id='bWaistv' style='font-weight:700'></span>%",
+                "band.waist.hint": "chest boundary ~ this value is &quot;waist&quot;",
+                "band.priv": "Priv boundary: <span id='bPrivv' style='font-weight:700'></span>%",
+                "band.priv.hint": "waist boundary ~ this value is &quot;priv&quot;",
+                "band.foot": "Feet boundary: <span id='bFootv' style='font-weight:700'></span>%",
+                "band.foot.hint": "priv boundary ~ this value is &quot;legs&quot;, this value ~ 100% is &quot;feet&quot;",
+                "debug.title": "Memory &amp; Debug",
+                "debug.mem.title": "Character Memory Profile", "debug.reset": "Reset current character's memory",
+                "debug.export": "Export debug logs", "debug.open": "Open logs folder",
+                "debug.info.expTitle": "Export logs", "debug.info.expDesc": "Package version info, system status, LLM request/errors, and config change logs (with masked keys) into a .txt in one click.",
+                "debug.info.recTitle": "Auto recovery", "debug.info.recDesc": "If config.json gets corrupted, the app won't crash; it backs it up and resets to factory defaults.",
+                "debug.banner.title": "Config auto-reset", "debug.banner.desc": "config.json failed to parse; backed up to <code>config.json.bak</code> and restored to factory defaults. Please re-set your preferences.",
+                "chat.title": "Chat Test", "chat.desc": "Driven by the LLM you connected; replies also show in the pet's bubble.",
+                "chat.ph": "Say something to the pet…", "chat.send": "Send",
+                "bar.save": "Save &amp; Apply", "bar.reset": "Reset to defaults",
+                "bar.reset.title": "Reset this character's settings to factory defaults (auto-snap bottom-right, 100% scale)",
+                "bar.dock": "Snap bottom-right",
+                "dyn.loading": "Loading…",
+                "dyn.settingSaving": "Saving…",
+                "dyn.saved": "Saved &amp; applied",
+                "dyn.testing": "Testing…",
+                "dyn.testOk": "Connection OK",
+                "dyn.testFail": "Connection failed",
+                "dyn.notConfigured": "LLM not configured. Please connect in the AI &amp; Chat card first.",
+                "dyn.memResetDone": "Memory reset",
+                "dyn.memResetFail": "Reset failed",
+                "dyn.collect": "Collecting logs…",
+                "dyn.exported": "Debug logs exported: ",
+                "dyn.exportFail": "Export failed: ",
+                "dyn.revealed": "Located logs folder in Finder",
+                "dyn.revealFail": "Failed to open logs folder: ",
+                "dyn.resetDone": "Current character settings restored to defaults",
+                "dyn.resetFail": "Reset failed",
+                "dyn.resetFailErr": "Reset failed: ",
+                "dyn.confirmMemReset": "Reset this character's memory? Affection, touch records, impression tags and personality changes will all be cleared.",
+                "dyn.confirmResetModel": "Reset this character's settings to factory defaults? (100% scale, auto-snap bottom-right, persona/touch zones all reset)",
+                "dyn.loadFailed": "Failed to load config. Please make sure the desktop pet is running.",
+                "dyn.snapped": "Snapped to bottom-right",
+                "dyn.opFail": "Operation failed: ",
+                "dyn.savedReload": "Saved; the pet is reloading to apply…",
+                "dyn.saveFail": "Save failed: ",
+                "dyn.llmConnected": "LLM connected; you can chat now.",
+                "dyn.llmNotConfigured": "LLM not configured yet. Please fill it in and save.",
+                "dyn.llmTesting": "Testing connection…",
+                "dyn.llmOk": "Connection OK!",
+                "dyn.llmFailPrefix": "Connection failed: ",
+                "dyn.llmSavePrefix": "Save failed: ",
+                "dyn.memRole": "Character: ",
+                "dyn.memStage": "Stage: ",
+                "dyn.memAffection": "affection",
+                "dyn.memChats": "Chats ",
+                "dyn.memTouches": "touches ",
+                "dyn.memTouchStat": "Touch stats: ",
+                "dyn.memTags": "Impression tags: ",
+                "dyn.memTraits": "Personality: ",
+                "dyn.memFirstMet": "First met on ",
+                "dyn.memNone": "none",
+                "dyn.memUnknown": "not known yet",
+                "dyn.memNoChange": "no notable change yet",
+            },
+            zh: {
+                "sidebar.title": "桌面宠物<br>设置面板",
+                "nav.ai": "AI 对话接入", "nav.model": "角色模型", "nav.render": "外观与渲染",
+                "nav.switch": "开关与模式", "nav.prompt": "人设定制", "nav.band": "部位判定",
+                "nav.debug": "记忆与调试", "nav.chat": "聊天测试", "version.line": "版本 2.1.0",
+                "llm.title": "接入大模型 · AI 对话",
+                "llm.info": "桌宠的对话由大模型驱动。请填入「你自己的」API 配置（不会内置任何密钥）。支持接入 DeepSeek 与 Ollama（本机本地大模型）；凡支持 OpenAI 兼容接口的服务也基本可接入。",
+                "llm.provider.label": "服务商 / 类型",
+                "llm.provider.opt.deepseek": "DeepSeek（云端 API）", "llm.provider.opt.ollama": "Ollama（本地模型）",
+                "llm.apikey.ph": "sk-…（提交后仅保存于本机 config.json）",
+                "llm.apikey.hint": "在 DeepSeek 开放平台创建并记账充值后获取",
+                "llm.baseurl.label": "接口地址（一般无需改）", "llm.model.label": "模型名（一般无需改）",
+                "llm.ollamaui.label": "Ollama 服务地址", "llm.ollamaui.hint": "需先在本机运行 Ollama 并已拉取对应模型（命令：ollama pull 模型名）",
+                "llm.ollamamodel.label": "模型名",
+                "llm.test": "测试连接", "llm.save": "保存接入",
+                "model.title": "角色模型选择", "model.desc": "切换桌宠角色，每个角色有独立的性格与人设。切换后程序自动重启加载新模型。下拉菜单标注了「有动画/无动画」和表情数量。",
+                "model.choose": "选择角色", "model.option.default": "芙宁娜（默认）",
+                "render.title": "外观与渲染",
+                "render.desc": "调整桌宠整体大小、位置、物理强度、清晰度、透明度和帧率。保存后桌宠自动重新加载，立即生效。",
+                "render.scale": "整体缩放：<span id='scalev' style='font-weight:700'></span>%",
+                "render.scale.hint": "100% 为默认大小，最小 30%、最大 150%。宽高同步变化、绝不变形。",
+                "render.px": "窗口位置 X：<span id='pxv' style='font-weight:700'></span> px",
+                "render.py": "窗口位置 Y：<span id='pyv' style='font-weight:700'></span> px",
+                "render.pos.hint": "拖动滑块可实时移动桌宠（范围 = 当前屏幕工作区）",
+                "render.ps": "物理强度：<span id='psv' style='font-weight:700'></span> 倍",
+                "render.ps.hint": "数值越大，衣服/头发在待机时的物理飘动越明显",
+                "render.rs": "输出清晰度：<span id='rsv' style='font-weight:700'></span>×",
+                "render.rs.hint": "数值越大，模型内部渲染分辨率越高、边缘越清晰，也更耗性能",
+                "render.opacity": "模型透明度：<span id='opacityv' style='font-weight:700'></span>%",
+                "render.opacity.hint": "调节桌宠模型的整体不透明度（10%~100%），可与桌面壁纸更好地融合",
+                "render.fps": "目标帧率：<span id='targetFpsVal' style='font-weight:700;color:var(--accent-dark);'></span> fps",
+                "render.fps.hint": "稳定渲染帧率。默认 60fps 流畅运行，降低可省 CPU/功耗。范围 15~120。",
+                "switch.title": "开关与模式",
+                "switch.muted": "静音模式", "switch.muted.desc": "开启后，桌宠不再显示任何聊天气泡/情绪台词，只保留 Live2D 动画与表情。适合纯动画观赏或安静工作场景。",
+                "switch.volume": "音量感知情绪反馈", "switch.volume.desc": "开启后，桌宠会定期读取 macOS 系统输出音量做反应：大音量 → 欢快表情；静音 → 安静陪伴表情。",
+                "switch.hide": "全屏应用自动隐藏", "switch.hide.desc": "开启后检测到全屏游戏/视频时桌宠自动隐藏，退出全屏立即恢复。避免遮挡画面。",
+                "switch.web": "联网搜索", "switch.web.desc": "开启后对话时自动联网搜索补充信息。需要能访问 DuckDuckGo/Wikipedia（国内需梯子），无梯子请保持关闭。",
+                "switch.screen": "屏幕感知（读取当前画面）",
+                "switch.screen.desc": "开启后，对话时会把当前屏幕截图一起发给所接入的大模型，让它能“看到”你正在看的代码 / 网页 / 应用，从而更好地理解并回答你（如写代码时读懂你的代码、看网页时读懂页面）。开启时会询问授权。请放心：本软件<b>不会上传任何数据到任何数据库</b>，所有操作都在本地完成，仅把信息发送给你自己配置的大模型 API。首次使用需在【系统设置→隐私与安全性→屏幕录制】中允许，建议搭配支持图片的多模态模型使用，可随时关闭。",
+                "prompt.title": "人设定制（System Prompt）",
+                "prompt.info": "留空即使用内置角色人设（含全局固定框架）。自定义时建议保留：①自称方式 ②回复长度限制 ③情绪标签规则（第一行（情绪名）），保证表情+气泡格式正常工作。",
+                "prompt.chat": "聊天对话人设", "prompt.chat.ph": "留空使用内置角色人设。用于正式聊天（双击模型输入框发送消息）。",
+                "prompt.chat.hint": "可写入性格、自称、世界观、回复规则等。保存后立即作为大模型系统提示生效。",
+                "prompt.mood": "悬停情绪话 Prompt", "prompt.mood.ph": "留空使用默认。鼠标移到模型身上时，桌宠会随机说一句 20 字以内的短句。",
+                "prompt.mood.hint": "用于鼠标悬停时的搭话。建议：20 字以内、每次不同。",
+                "prompt.touch": "触碰反馈 Prompt 前缀", "prompt.touch.ph": "留空使用默认。用于点击模型各部位的撒娇反馈，此处仅用于覆写前缀人设基调。",
+                "prompt.touch.hint": "建议写入人设风格、自称口吻等基调性描述，不用写具体部位要求。",
+                "band.title": "部位点击判定", "band.info": "拖动下方分界线，可自定义点击模型不同部位（头 / 胸 / 腰 / 私处 / 腿 / 脚）的反馈范围。数值 = 分界点占模型画布高度的百分比，从上到下依次递增。",
+                "band.head": "头部分界：<span id='bHeadv' style='font-weight:700'></span>%",
+                "band.head.hint": "0% ~ 此值 判为「头」（摸头反馈）",
+                "band.chest": "胸部分界：<span id='bChestv' style='font-weight:700'></span>%",
+                "band.chest.hint": "头部分界 ~ 此值 判为「胸」",
+                "band.waist": "腰部分界：<span id='bWaistv' style='font-weight:700'></span>%",
+                "band.waist.hint": "胸部分界 ~ 此值 判为「腰」",
+                "band.priv": "私处分界：<span id='bPrivv' style='font-weight:700'></span>%",
+                "band.priv.hint": "腰部分界 ~ 此值 判为「私处」",
+                "band.foot": "脚部分界：<span id='bFootv' style='font-weight:700'></span>%",
+                "band.foot.hint": "私处分界 ~ 此值 判为「腿」，此值 ~ 100% 判为「脚」",
+                "debug.title": "记忆与调试",
+                "debug.mem.title": "角色记忆档案", "debug.reset": "重置当前角色记忆",
+                "debug.export": "导出调试日志", "debug.open": "打开日志目录",
+                "debug.info.expTitle": "导出日志", "debug.info.expDesc": "一键把版本信息、系统状态、LLM 接口请求/报错、配置变更记录（含脱敏 Key）打包成 .txt。",
+                "debug.info.recTitle": "自动恢复", "debug.info.recDesc": "如果 config.json 被意外损坏，程序不会崩溃，自动备份并重置为出厂默认。",
+                "debug.banner.title": "配置已自动重置", "debug.banner.desc": "config.json 解析失败，已备份为 <code>config.json.bak</code> 并恢复出厂默认。请重新设置个性化参数。",
+                "chat.title": "聊天测试", "chat.desc": "由你所接入的大模型驱动，回复会同步显示在桌宠的气泡里。",
+                "chat.ph": "想对桌宠说点什么…", "chat.send": "发送",
+                "bar.save": "保存并生效", "bar.reset": "恢复默认",
+                "bar.reset.title": "将当前角色的所有设置恢复为出厂默认（位置自动贴右下角、缩放100%）",
+                "bar.dock": "贴回右下角",
+                "dyn.loading": "加载中…",
+                "dyn.settingSaving": "正在保存…",
+                "dyn.saved": "已保存并生效",
+                "dyn.testing": "正在测试…",
+                "dyn.testOk": "连接成功",
+                "dyn.testFail": "连接失败",
+                "dyn.notConfigured": "尚未接入大模型，请先在「AI 对话接入」中完成连接。",
+                "dyn.memResetDone": "记忆已重置",
+                "dyn.memResetFail": "重置失败",
+                "dyn.collect": "正在收集日志，请稍候…",
+                "dyn.exported": "调试日志已导出：",
+                "dyn.exportFail": "导出日志失败：",
+                "dyn.revealed": "已在 Finder 中定位到日志目录",
+                "dyn.revealFail": "打开日志目录失败：",
+                "dyn.resetDone": "当前角色设置已恢复默认",
+                "dyn.resetFail": "恢复失败",
+                "dyn.resetFailErr": "恢复失败：",
+                "dyn.confirmMemReset": "确定要重置当前角色的记忆吗？好感度、触碰记录、印象标签、人格变化将全部清零。",
+                "dyn.confirmResetModel": "确定要把当前角色的所有设置恢复为出厂默认吗？\n（缩放100%、位置自动贴右下角、人设/部位分界等全部重置）",
+                "dyn.loadFailed": "读取配置失败，请确认桌宠正在运行。",
+                "dyn.snapped": "已贴回右下角",
+                "dyn.opFail": "操作失败：",
+                "dyn.savedReload": "已保存，桌宠正在重新加载生效…",
+                "dyn.saveFail": "保存失败：",
+                "dyn.llmConnected": "已接入大模型，可正常对话。",
+                "dyn.llmNotConfigured": "尚未接入大模型，请填写后保存。",
+                "dyn.llmTesting": "连接测试中…",
+                "dyn.llmOk": "连接成功！",
+                "dyn.llmFailPrefix": "连接失败：",
+                "dyn.llmSavePrefix": "保存失败：",
+                "dyn.memRole": "角色：",
+                "dyn.memStage": "阶段：",
+                "dyn.memAffection": "好感度",
+                "dyn.memChats": "累计对话 ",
+                "dyn.memTouches": "累计触碰 ",
+                "dyn.memTouchStat": "触碰统计：",
+                "dyn.memTags": "印象标签：",
+                "dyn.memTraits": "人格变化：",
+                "dyn.memFirstMet": "初次相遇：",
+                "dyn.memNone": "无",
+                "dyn.memUnknown": "尚未了解",
+                "dyn.memNoChange": "尚未形成明显变化",
+            },
+        };
+        let lang = "en"; // 默认英文
+        function t(key) { const v = I18N[lang] && I18N[lang][key]; return (v != null) ? v : (I18N.en[key] != null ? I18N.en[key] : key); }
+        function fillValueSpans() {
+            const map = { scale:["scalev",""], ps:["psv",""], rs:["rsv",""], opacity:["opacityv","%"], targetFps:["targetFpsVal",""], px:["pxv",""], py:["pyv",""], bHead:["bHeadv","%"], bChest:["bChestv","%"], bWaist:["bWaistv","%"], bPriv:["bPrivv","%"], bFoot:["bFootv","%"] };
+            for (const inputId in map) {
+                const [spanId, suffix] = map[inputId];
+                const el = document.getElementById(spanId), inp = document.getElementById(inputId);
+                if (el && inp && inp.value !== "") el.textContent = inp.value + suffix;
+            }
+        }
+        function applyLang() {
+            const dict = I18N[lang];
+            document.querySelectorAll("[data-i18n]").forEach((el) => {
+                const k = el.getAttribute("data-i18n");
+                if (dict[k] != null) el.innerHTML = dict[k];
+            });
+            document.querySelectorAll("[data-i18n-ph]").forEach((el) => {
+                const k = el.getAttribute("data-i18n-ph");
+                if (dict[k] != null) el.setAttribute("placeholder", dict[k]);
+            });
+            document.querySelectorAll("[data-i18n-title]").forEach((el) => {
+                const k = el.getAttribute("data-i18n-title");
+                if (dict[k] != null) el.setAttribute("title", dict[k]);
+            });
+            document.querySelectorAll(".lang-switch a").forEach(function (a) {
+                a.classList.toggle("active", a.getAttribute("data-lang") === lang);
+            });
+            document.documentElement.lang = (lang === "zh") ? "zh-CN" : "en";
+            fillValueSpans();
+        }
+        // 语言选择（默认英文，选择结果保存在 localStorage 持久化）
+        try { if (localStorage.getItem("fpet_lang") === "zh") lang = "zh"; } catch (e) {}
+        document.querySelectorAll(".lang-switch a").forEach(function (a) {
+            a.addEventListener("click", function () {
+                lang = a.getAttribute("data-lang") || "en";
+                try { localStorage.setItem("fpet_lang", lang); } catch (e) {}
+                applyLang();
+            });
+        });
+        applyLang(); // 页面加载即应用所选语言（默认英文）
+
         const $ = (id) => document.getElementById(id);
         const statusEl = $("status");
 
@@ -803,7 +1093,7 @@
                     }
                 } catch {}
             } catch (e) {
-                statusEl.textContent = "读取配置失败，请确认桌宠正在运行。";
+                statusEl.textContent = t("dyn.loadFailed");
                 statusEl.className = "err";
             }
         }
@@ -844,11 +1134,11 @@
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ positionX: -1, positionY: -1 }),
                 });
-                statusEl.textContent = "已贴回右下角";
+                statusEl.textContent = t("dyn.snapped");
                 statusEl.className = "ok";
                 await load();
             } catch (e) {
-                statusEl.textContent = "操作失败：" + (e.message || e);
+                statusEl.textContent = t("dyn.opFail") + (e.message || e);
                 statusEl.className = "err";
             }
         });
@@ -857,7 +1147,7 @@
             ev.preventDefault();
             const btn = $("save");
             btn.disabled = true;
-            statusEl.textContent = "保存中…";
+            statusEl.textContent = t("dyn.settingSaving");
             statusEl.className = "";
             try {
                 const opacityPct = Math.max(10, Math.min(100, Number($("opacity").value) || 100));
@@ -892,7 +1182,7 @@
                 });
                 const data = await r.json();
                 if (data.ok) {
-                    statusEl.textContent = "已保存，桌宠正在重新加载生效…";
+                    statusEl.textContent = t("dyn.savedReload");
                     statusEl.className = "ok";
                     // v2.0.3 切换了角色：刷新表单，显示目标角色的专属设置（位置/缩放/人设等各不同）
                     const submittedModel = $("modelPath").value;
@@ -903,7 +1193,7 @@
                     throw new Error(data.error || "保存失败");
                 }
             } catch (e) {
-                statusEl.textContent = "保存失败：" + (e.message || e);
+                statusEl.textContent = t("dyn.saveFail") + (e.message || e);
                 statusEl.className = "err";
             } finally {
                 btn.disabled = false;
@@ -941,8 +1231,8 @@
                     $("ollamaModel").value = l.ollamaModel || "";
                     $("apiKey").value = "";
                     syncProviderUI();
-                    if (d.configured) llmStatus.textContent = "已接入大模型，可正常对话。";
-                    else llmStatus.textContent = "尚未接入大模型，请填写后保存。";
+                    if (d.configured) llmStatus.textContent = t("dyn.llmConnected");
+                    else llmStatus.textContent = t("dyn.llmNotConfigured");
                 }
             } catch {}
         }
@@ -950,7 +1240,7 @@
             const btn = action === "test" ? $("testLLM") : $("saveLLM");
             btn.disabled = true;
             llmStatus.className = "err";
-            llmStatus.textContent = action === "test" ? "连接测试中…" : "保存中…";
+            llmStatus.textContent = action === "test" ? t("dyn.llmTesting") : t("dyn.settingSaving");
             try {
                 const r = await fetch(action === "test" ? "/api/llm/test" : "/api/llm", {
                     method: "POST",
@@ -961,15 +1251,15 @@
                 if (d.ok) {
                     llmStatus.className = "ok";
                     llmStatus.textContent = action === "test"
-                        ? "连接成功，回复：" + (d.reply || "")
-                        : "已保存接入，桌宠可正常对话了~";
+                        ? t("dyn.llmOk") + (d.reply ? " " + d.reply : "")
+                        : t("dyn.saved");
                     if (action === "save") loadLLM();
                 } else {
-                    throw new Error(d.error || "连接失败");
+                    throw new Error(d.error || t("dyn.testFail"));
                 }
             } catch (e) {
                 llmStatus.className = "err";
-                llmStatus.textContent = (action === "test" ? "连接失败：" : "保存失败：") + (e.message || e);
+                llmStatus.textContent = (action === "test" ? t("dyn.llmFailPrefix") : t("dyn.llmSavePrefix")) + (e.message || e);
             } finally {
                 btn.disabled = false;
             }
@@ -1029,7 +1319,7 @@
                 btnExport.addEventListener("click", async () => {
                     try {
                         btnExport.disabled = true;
-                        toast("正在收集日志，请稍候…");
+                        toast(t("dyn.collect"));
                         const res = await fetch("/api/logs/export");
                         if (!res.ok) throw new Error("HTTP " + res.status);
                         const blob = await res.blob();
@@ -1046,9 +1336,9 @@
                         a.click();
                         a.remove();
                         setTimeout(() => URL.revokeObjectURL(url), 10000);
-                        toast("调试日志已导出：" + filename);
+                        toast(t("dyn.exported") + filename);
                     } catch (e) {
-                        toast("导出日志失败：" + (e.message || e), "err");
+                        toast(t("dyn.exportFail") + (e.message || e), "err");
                     } finally {
                         btnExport.disabled = false;
                     }
@@ -1060,9 +1350,9 @@
                         const res = await fetch("/api/logs/reveal");
                         const j = await res.json().catch(() => ({}));
                         if (!res.ok || !j.ok) throw new Error((j && j.error) || "HTTP " + res.status);
-                        toast("已在 Finder 中定位到日志目录");
+                        toast(t("dyn.revealed"));
                     } catch (e) {
-                        toast("打开日志目录失败：" + (e.message || e), "err");
+                        toast(t("dyn.revealFail") + (e.message || e), "err");
                     }
                 });
             }
@@ -1075,17 +1365,17 @@
                         const d = await r.json();
                         if (d.ok && d.memory) {
                             const m = d.memory;
-                            const touchList = Object.entries(m.touchCounts || {}).map(([k, v]) => `${k}×${v}`).join("、") || "无";
-                            const tags = (m.impressionTags || []).join("、") || "尚未了解";
-                            const traits = (m.personalityTraits || []).join("、") || "尚未形成明显变化";
+                            const touchList = Object.entries(m.touchCounts || {}).map(([k, v]) => `${k}×${v}`).join("、") || t("dyn.memNone");
+                            const tags = (m.impressionTags || []).join("、") || t("dyn.memUnknown");
+                            const traits = (m.personalityTraits || []).join("、") || t("dyn.memNoChange");
                             memEl.innerHTML = [
-                                `角色：<b>${d.character}</b>　阶段：<b>${d.stage}</b>（好感度 ${m.affection}/100）`,
+                                `${t("dyn.memRole")}<b>${d.character}</b> · ${t("dyn.memStage")}<b>${d.stage}</b> (${t("dyn.memAffection")} ${m.affection}/100)`,
                                 `<span style="color:var(--muted-light)">${d.desc}</span>`,
-                                `累计对话 <b>${m.totalChats}</b> 次　累计触碰 <b>${m.totalTouches}</b> 次`,
-                                `触碰统计：${touchList}`,
-                                `印象标签：${tags}`,
-                                `人格变化：${traits}`,
-                                m.firstMet ? `初次相遇：${m.firstMet.slice(0, 10)}` : "",
+                                `${t("dyn.memChats")}<b>${m.totalChats}</b> · ${t("dyn.memTouches")}<b>${m.totalTouches}</b>`,
+                                `${t("dyn.memTouchStat")}${touchList}`,
+                                `${t("dyn.memTags")}${tags}`,
+                                `${t("dyn.memTraits")}${traits}`,
+                                m.firstMet ? `${t("dyn.memFirstMet")}${m.firstMet.slice(0, 10)}` : "",
                             ].filter(Boolean).join("<br>");
                         }
                     } catch {}
@@ -1094,12 +1384,12 @@
                 setInterval(refreshMemory, 5000);
                 if (btnReset) {
                     btnReset.addEventListener("click", async () => {
-                        if (!confirm("确定要重置当前角色的记忆吗？好感度、触碰记录、印象标签、人格变化将全部清零。")) return;
+                        if (!confirm(t("dyn.confirmMemReset"))) return;
                         try {
                             await fetch("/api/memory/reset", { method: "POST" });
                             refreshMemory();
-                            toast("记忆已重置");
-                        } catch (e) { toast("重置失败", "err"); }
+                            toast(t("dyn.memResetDone"));
+                        } catch (e) { toast(t("dyn.memResetFail"), "err"); }
                     });
                 }
             })();
@@ -1124,7 +1414,7 @@
         const btnResetModel = document.getElementById("resetModel");
         if (btnResetModel) {
             btnResetModel.addEventListener("click", async () => {
-                if (!confirm("确定要把当前角色的所有设置恢复为出厂默认吗？\n（缩放100%、位置自动贴右下角、人设/部位分界等全部重置）")) return;
+                if (!confirm(t("dyn.confirmResetModel"))) return;
                 try {
                     const r = await fetch("/api/settings", {
                         method: "POST",
@@ -1134,11 +1424,11 @@
                     const d = await r.json();
                     if (d.ok) {
                         await load();
-                        toast("当前角色设置已恢复默认");
+                        toast(t("dyn.resetDone"));
                     } else {
-                        toast("恢复失败", "err");
+                        toast(t("dyn.resetFail"), "err");
                     }
-                } catch (e) { toast("恢复失败：" + (e.message || e), "err"); }
+                } catch (e) { toast(t("dyn.resetFailErr") + (e.message || e), "err"); }
             });
         }
 
