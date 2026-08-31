@@ -246,59 +246,114 @@ function requestJSONStream(url, payload, bearer, onChunk, onDone, onErr) {
   req.end();
 }
 
-// 流式版 llmRequest
+// ---------- v2.1.0 屏幕感知：把当前屏幕截图作为多模态图像随聊天一起发给大模型 ----------
+// 开启后，桌宠对话时能“看到”旅行者正在看的代码 / 网页 / 应用，结合画面更准确地回答。
+// 需要 macOS「屏幕录制」权限；默认关闭（隐私考虑），可在设置面板随时开/关。
+const SCREENSHOT_PATH = path.join(require("os").tmpdir(), "fpet_screen.png");
+// 截取当前屏幕，返回 data URL；无权限/失败返回 null，调用方自动降级为纯文本
+function captureScreen() {
+  return new Promise((resolve) => {
+    exec(`screencapture -x -t png "${SCREENSHOT_PATH}"`, { timeout: 6000 }, (err) => {
+      if (err) {
+        writeLog("warn", "屏幕截屏失败（可能未授予“屏幕录制”权限）", { error: String(err && err.message || err) });
+        resolve(null);
+        return;
+      }
+      try {
+        const b64 = fs.readFileSync(SCREENSHOT_PATH).toString("base64");
+        // 过小的 base64 视为空/黑屏，直接放弃，避免白白消耗 token
+        resolve(b64.length > 1024 ? `data:image/png;base64,${b64}` : null);
+      } catch (e) { resolve(null); }
+    });
+  });
+}
+// 消息里是否含图片（多模态）
+function containsImage(messages) {
+  return Array.isArray(messages) &&
+    messages.some((m) => Array.isArray(m.content) && m.content.some((p) => p && p.type === "image_url"));
+}
+// 去掉图片，降级为纯文本（模型不支持图片时自动重试）
+function stripImages(messages) {
+  return messages.map((m) => {
+    if (!Array.isArray(m.content)) return m;
+    const textPart = m.content.find((p) => p && p.type === "text");
+    return Object.assign({}, m, { content: textPart ? String(textPart.text || "") : "" });
+  });
+}
+// 把截图以 image_url 多模态消息附加到 messages 的最后一条用户消息
+function attachScreenshot(messages, dataUrl) {
+  let last = messages[messages.length - 1];
+  if (!last || last.role !== "user") { last = { role: "user", content: "" }; messages.push(last); }
+  const text = typeof last.content === "string" ? last.content : "";
+  last.content = [
+    { type: "text", text: text || "（旅行者刚刚共享了屏幕画面，请结合当前屏幕内容来理解并回答）" },
+    { type: "image_url", image_url: { url: dataUrl } },
+  ];
+}
+
+// 流式版 llmRequest（带图请求失败时自动降级为纯文本重试一次）
 function llmRequestStream(messages, onChunk, onDone, onErr, cfgOverride) {
-  let c = cfgOverride || llmConfig();
-  c = Object.assign({}, LLM_DEFAULTS, c);
-  if (!isLLMConfigured(c)) { onErr("尚未接入大模型"); return; }
-  if (c.provider === "ollama") {
-    // Ollama 不支持流式，降级为普通请求
-    llmRequest(messages, onDone, onErr, cfgOverride);
-    return;
+  const withImage = containsImage(messages);
+  const doOnce = (msgs, chunk, done, err) => {
+    let c = cfgOverride || llmConfig();
+    c = Object.assign({}, LLM_DEFAULTS, c);
+    if (!isLLMConfigured(c)) { err("尚未接入大模型"); return; }
+    if (c.provider === "ollama") {
+      // Ollama 不支持流式，降级为普通请求（内部同样带图降级重试）
+      llmRequest(msgs, done, err, cfgOverride);
+      return;
+    }
+    const base = String(c.baseUrl || LLM_DEFAULTS.baseUrl).replace(/\/+$/, "");
+    const url = /\/chat\/completions$/.test(base) ? base : base + "/chat/completions";
+    requestJSONStream(
+      url,
+      { model: c.model || LLM_DEFAULTS.model, messages: msgs, temperature: 0.9, max_tokens: 500 },
+      c.apiKey,
+      chunk,
+      done,
+      err
+    );
+  };
+  if (withImage) {
+    doOnce(messages, onChunk, onDone, (e) => {
+      writeLog("warn", "带屏幕截图流式请求失败，已降级为纯文本重试", { error: String(e) });
+      doOnce(stripImages(messages), onChunk, onDone, onErr);
+    });
+  } else {
+    doOnce(messages, onChunk, onDone, onErr);
   }
-  const base = String(c.baseUrl || LLM_DEFAULTS.baseUrl).replace(/\/+$/, "");
-  const url = /\/chat\/completions$/.test(base) ? base : base + "/chat/completions";
-  requestJSONStream(
-    url,
-    { model: c.model || LLM_DEFAULTS.model, messages, temperature: 0.9, max_tokens: 500 },
-    c.apiKey,
-    onChunk,
-    onDone,
-    onErr
-  );
 }
 
 // 统一大模型请求分发：根据配置把消息发给所选厂商（OpenAI 兼容协议）
-// 可传入 cfgOverride 用于连通性测试（不改变已保存的配置）
+// 可传入 cfgOverride 用于连通性测试（不改变已保存的配置）；带图失败自动降级纯文本重试
 function llmRequest(messages, onOk, onErr, cfgOverride) {
-  let c = cfgOverride || llmConfig();
-  c = Object.assign({}, LLM_DEFAULTS, c);
-  if (!isLLMConfigured(c)) {
-    onErr("尚未接入大模型，请先到设置面板填写你的 API（DeepSeek 或 Ollama）");
-    return;
+  const withImage = containsImage(messages);
+  const doOnce = (msgs, ok, err) => {
+    let c = cfgOverride || llmConfig();
+    c = Object.assign({}, LLM_DEFAULTS, c);
+    if (!isLLMConfigured(c)) {
+      err("尚未接入大模型，请先到设置面板填写你的 API（DeepSeek 或 Ollama）");
+      return;
+    }
+    if (c.provider === "ollama") {
+      const base = String(c.ollamaUrl || LLM_DEFAULTS.ollamaUrl).replace(/\/+$/, "");
+      const url =
+        base.endsWith("/api/chat") ? base : /\/v1\/chat\/completions$/.test(base) ? base : base + "/v1/chat/completions";
+      requestJSON(url, { model: c.ollamaModel, messages: msgs, stream: false, temperature: 0.9 }, "", ok, err);
+      return;
+    }
+    const base = String(c.baseUrl || LLM_DEFAULTS.baseUrl).replace(/\/+$/, "");
+    const url = /\/chat\/completions$/.test(base) ? base : base + "/chat/completions";
+    requestJSON(url, { model: c.model || LLM_DEFAULTS.model, messages: msgs, temperature: 0.9, max_tokens: 200 }, c.apiKey, ok, err);
+  };
+  if (withImage) {
+    doOnce(messages, onOk, (e) => {
+      writeLog("warn", "带屏幕截图请求失败，已降级为纯文本重试", { error: String(e) });
+      doOnce(stripImages(messages), onOk, onErr);
+    });
+  } else {
+    doOnce(messages, onOk, onErr);
   }
-  if (c.provider === "ollama") {
-    const base = String(c.ollamaUrl || LLM_DEFAULTS.ollamaUrl).replace(/\/+$/, "");
-    const url =
-      base.endsWith("/api/chat") ? base : /\/v1\/chat\/completions$/.test(base) ? base : base + "/v1/chat/completions";
-    requestJSON(
-      url,
-      { model: c.ollamaModel, messages, stream: false, temperature: 0.9 },
-      "",
-      onOk,
-      onErr
-    );
-    return;
-  }
-  const base = String(c.baseUrl || LLM_DEFAULTS.baseUrl).replace(/\/+$/, "");
-  const url = /\/chat\/completions$/.test(base) ? base : base + "/chat/completions";
-  requestJSON(
-    url,
-    { model: c.model || LLM_DEFAULTS.model, messages, temperature: 0.9, max_tokens: 200 },
-    c.apiKey,
-    onOk,
-    onErr
-  );
 }
 // ---------- 对话历史：用 JSON 持久化保存，实现跨重启的长上下文记忆 ----------
 // 每个角色独立保存聊天历史（切换模型后互不串味）。
@@ -618,7 +673,7 @@ function enforceReplyLimit(reply, type) {
   return trimmed;
 }
 
-function chatWithLLM(userText, onOk, onErr, context) {
+async function chatWithLLM(userText, onOk, onErr, context) {
   const cfg = readConfig();
   const curChatHistory = getChatHistory(cfg.modelPath);
   // 先把用户消息记入当前角色的历史，再带上最近若干条一起发给大模型
@@ -650,6 +705,11 @@ function chatWithLLM(userText, onOk, onErr, context) {
     },
     ...curChatHistory.slice(-MAX_CONTEXT_MESSAGES),
   ];
+  // ===== v2.1.0 屏幕感知：开关开启时截取当前屏幕，作为多模态图片一起发给大模型，让它能“看到”你在看的代码/网页 =====
+  if (cfg.screenSense) {
+    const shot = await captureScreen();
+    if (shot) attachScreenshot(messages, shot);
+  }
   llmRequest(
     messages,
     (text) => {
@@ -979,6 +1039,7 @@ const DEFAULT_CONFIG = {
   autoHideFullscreen: false,        // 全屏游戏/视频自动隐藏桌宠；退出全屏恢复
   modelPath: "models/芙宁娜",        // 当前模型目录路径（相对项目根目录）
   webSearchEnabled: false,          // 联网搜索开关（需可访问 DuckDuckGo/Wikipedia，有梯子才建议开启）
+  screenSense: false,               // v2.1.0 屏幕感知：对话时截取当前屏幕一并发给大模型（需「屏幕录制」权限，默认关防隐私泄露）
   // ----- v2.0 Round3 新增：目标 FPS 分段 ----------
   idleFps: 15,                      // 闲置无交互 30 秒后降到的帧率（省资源）
   activeFps: 60,                    // 有交互/对话时的帧率
@@ -1673,6 +1734,11 @@ function startStaticServer() {
                     { role: "system", content: basePrompt + (searchContext ? ("\n" + searchContext) : "") + contextBlock + memoryBlock },
                     ...curChatHistory.slice(-MAX_CONTEXT_MESSAGES),
                   ];
+                  // ===== v2.1.0 屏幕感知（流式）：开启时截取当前屏幕，附加为多模态图片发给大模型 =====
+                  if (cfg.screenSense) {
+                    const shot = await captureScreen();
+                    if (shot) attachScreenshot(messages, shot);
+                  }
                   let accumulated = "";
                   llmRequestStream(
                     messages,

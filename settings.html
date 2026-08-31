@@ -609,6 +609,13 @@
                         </div>
                         <input type="checkbox" id="webSearchEnabled" />
                     </div>
+                    <div class="switch-row">
+                        <div>
+                            <div class="lbl">屏幕感知（读取当前画面）</div>
+                            <div class="desc">开启后，对话时会把当前屏幕截图一起发给所接入的大模型，让它能“看到”你正在看的代码 / 网页 / 应用，从而更好地理解并回答你（如写代码时读懂你的代码、看网页时读懂页面）。截图仅在本地生成、仅发给你自己配置的大模型，可随时关闭。首次使用需在【系统设置→隐私与安全性→屏幕录制】中允许，建议搭配支持图片的多模态模型使用。</div>
+                        </div>
+                        <input type="checkbox" id="screenSense" />
+                    </div>
                 </section>
 
                 <!-- ===== 人设定制 ===== -->
@@ -739,6 +746,7 @@
                 $("volumeSense").checked = cfg.volumeSense !== false;
                 $("autoHideFullscreen").checked = !!cfg.autoHideFullscreen;
                 $("webSearchEnabled").checked = !!cfg.webSearchEnabled;
+                $("screenSense").checked = !!cfg.screenSense;
                 const fps = Math.max(15, Math.min(120, Number(cfg.targetFps) || 60));
                 $("targetFps").value = fps;
                 $("targetFpsVal").textContent = fps;
@@ -867,6 +875,7 @@
                         volumeSense: $("volumeSense").checked,
                         autoHideFullscreen: $("autoHideFullscreen").checked,
                         webSearchEnabled: $("webSearchEnabled").checked,
+                        screenSense: $("screenSense").checked,
                         targetFps: Number($("targetFps").value),
                         modelPath: $("modelPath").value,
                         systemPrompt: $("systemPrompt").value,

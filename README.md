@@ -24,6 +24,7 @@ A Live2D desktop pet that lives on your macOS screen, built with **Electron + PI
 - **Personality evolution (v2.0.4)**: your words and actions gradually shape each character's personality — a kind-hearted chat may make them clingier, a rough one more guarded. The change is stored locally and shows up in future behaviour.
 - **System awareness**: reads the foreground app / CPU / battery / weather; reacts when the CPU is high or the battery is low.
 - **Web search**: the pet can search the web in real time when a question needs fresh info.
+- **Screen awareness (v2.1.0)**: when enabled, the pet captures your current screen and sends it together with your question to the LLM, so it can genuinely *see* the code / webpage / app you're looking at and answer far more accurately (e.g. it reads your code while you code, reads the page while you browse). Requires the macOS “Screen Recording” permission and pairs best with a multi-modal (vision-capable) model. It is **off by default** to protect your privacy and can be turned off anytime in Settings.
 - **Configurable LLM**: bring your own DeepSeek / Ollama key and model; nothing is hard-coded.
 - **Adjustable render quality**: 1×–2× output resolution slider; adjustable physics intensity; adjustable idle/active FPS.
 - **Login auto-start**: launches at login (toggle in the tray menu).
@@ -43,7 +44,7 @@ A Live2D desktop pet that lives on your macOS screen, built with **Electron + PI
 
 ### Install (macOS Apple Silicon)
 
-Download **fpet-2.0.0-arm64.dmg** from the [Releases](https://github.com/AnastasyaLiao/fpet-furina-mac-desktop-pet/releases) page, open it and drag **fpet** into your Applications folder.
+Download **fpet-2.1.0-arm64.dmg** from the [Releases](https://github.com/AnastasyaLiao/fpet-furina-mac-desktop-pet/releases) page, open it and drag **fpet** into your Applications folder.
 
 ### Usage
 
@@ -102,7 +103,7 @@ npm start        # launch the pet
 
 ```bash
 npm install
-npm run dist     # → dist/fpet-2.0.0-arm64.dmg
+npm run dist     # → dist/fpet-2.1.0-arm64.dmg
 ```
 
 ### License
@@ -130,6 +131,7 @@ npm run dist     # → dist/fpet-2.0.0-arm64.dmg
 - **人格演化（v2.0.4）**：你的言行会逐步塑造每个角色的性格——温柔的聊天可能让 TA 变得更黏人，粗暴的回应可能让 TA 更戒备。变化本地持久化，并体现在后续言行中。
 - **系统感知**：读取前台应用 / CPU / 电量 / 天气；CPU 过高、电量过低时会主动提醒。
 - **联网搜索**：遇到需要实时信息的问题时，桌宠会自动联网搜索。
+- **屏幕感知（v2.1.0）**：开启后，对话时会把当前屏幕截图一起发给所接入的大模型，让它能“看到”你正在看的代码 / 网页 / 应用，从而更准确地回答你——写代码时它能读懂你的代码、看网页时它能读懂页面内容。截图仅在本地生成、仅发给你自己配置的大模型（建议搭配支持图片的多模态模型）。需要 macOS「屏幕录制」权限；**默认关闭以保护隐私**，可在设置面板一键关闭。
 - **可配置大模型**：接入你自己的 DeepSeek / Ollama 密钥与模型，代码不内置任何厂商密钥。
 - **可调渲染质量**：1×~2× 输出分辨率滑块；物理强度可调；待机/活跃帧率可调。
 - **开机自启**：登录时自动启动（可在托盘菜单开关）。
@@ -149,7 +151,7 @@ npm run dist     # → dist/fpet-2.0.0-arm64.dmg
 
 ### 安装（macOS Apple Silicon）
 
-从 [Releases](https://github.com/AnastasyaLiao/fpet-furina-mac-desktop-pet/releases) 页面下载 **fpet-2.0.0-arm64.dmg**，打开后把 **fpet** 拖入「应用程序」即可。
+从 [Releases](https://github.com/AnastasyaLiao/fpet-furina-mac-desktop-pet/releases) 页面下载 **fpet-2.1.0-arm64.dmg**，打开后把 **fpet** 拖入「应用程序」即可。
 
 ### 常用交互
 
@@ -208,13 +210,22 @@ npm start        # 启动桌宠
 
 ```bash
 npm install
-npm run dist     # → dist/fpet-2.0.0-arm64.dmg
+npm run dist     # → dist/fpet-2.1.0-arm64.dmg
 ```
 
 ### 许可说明
 
 - **代码**：MIT License（见 LICENSE）。仅供学习交流，请勿商用。
 - **模型**：版权归 miHoYo / 画师 / 建模师所有；禁止商用、禁止盗卖、禁止二次配布（见上文[模型来源与版权](#模型来源与版权)）。
+
+---
+
+## v2.1.0 Release Notes
+
+- **屏幕感知（全新）**：对话时可选把当前屏幕截图一起发给所接入的大模型，让它能“看到”你正在看的代码 / 网页 / 应用，从而更准确地回答你——写代码时它读懂你的代码，看网页时它读懂页面内容，大大丰富桌宠的实用价值，不仅能撒娇，更能帮你干活。
+- **隐私开关**：屏幕感知默认关闭；可随时在「设置 → 开关与模式 → 屏幕感知」一键开启 / 关闭。截图仅在本地生成、仅发给你自己配置的大模型。
+- **自动降级**：若当前模型不支持图片，会自动退化为纯文本回答，不影响正常使用。
+- **权限说明**：开启后首次使用需在 macOS「系统设置 → 隐私与安全性 → 屏幕录制」中为 fpet 授权（建议搭配支持图片的多模态模型，如 Ollama 的视觉模型）。
 
 ---
 
