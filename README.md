@@ -69,7 +69,7 @@ In Settings → LLM section, pick a provider and fill in **your own** config: De
 The Live2D models are fan-made free resources of Genshin characters.
 
 - **Furina** — artist: **@三文鱼爱睡觉**; split/modelling: **啾咪晏之**; demo video: https://www.bilibili.com/video/BV1D94y1G7Cq/
-- Other models (Yae Miko, Nahida, Ganyu, Lauma, Hu Tao, Barbara, Nefer, Skirk) are free fan-made resources from public sources.
+- Other models (Yae Miko, Nahida, Ganyu, Lauma, Hu Tao, Barbara, Nefer, Skirk) are free fan-made resources from [模之屋 (Aplaybox)](https://www.aplaybox.com) and Bilibili.
 
 Furina model notes:
 1. The Furina model copyright belongs to miHoYo.
@@ -79,7 +79,7 @@ Furina model notes:
 5. It may be used for livestreaming, but not for profit.
 6. The modeller and artist are not responsible for anyone who violates the rules.
 
-> The program code is written by the repository author; **model assets belong to their original artists / modellers / miHoYo**. Do not use this project (including models) commercially.
+> The program code is wholly authored by and copyrighted to **AnastasyaLiao**; **model assets belong to their original artists / modellers / miHoYo**. Do not use this project (including models) commercially.
 
 ### How to Add / Replace a Model
 
@@ -175,7 +175,7 @@ npm run dist     # → dist/fpet-2.0.0-arm64.dmg
 本项目使用的 Live2D 模型均为《原神》角色的免费二创模型。
 
 - **芙宁娜**：画师 **@三文鱼爱睡觉**；拆分/建模 **啾咪晏之**；演示视频 https://www.bilibili.com/video/BV1D94y1G7Cq/
-- 其余模型（八重神子、纳西妲、甘雨、菈乌玛、胡桃、芭芭拉、奈芙尔、丝柯克）为公开渠道的免费二创模型。
+- 其余模型（八重神子、纳西妲、甘雨、菈乌玛、胡桃、芭芭拉、奈芙尔、丝柯克）为免费二创模型，来源见[模之屋](https://www.aplaybox.com)与 B 站（bilibili）。
 
 【芙宁娜模型注意事项】
 1. 芙宁娜模型版权归属于 miHoYo
@@ -185,7 +185,7 @@ npm run dist     # → dist/fpet-2.0.0-arm64.dmg
 5. 可用于直播，但注意不能盈利
 6. 模型师和画师不为违反规定使用的人负责
 
-> 本项目中的程序代码为本仓库作者编写；**模型资源版权归原画师 / 建模师 / miHoYo 所有**。请勿将本项目（含模型）用于任何商业用途。
+> 本项目中的**程序代码版权归 AnastasyaLiao（作者）所有**；**模型资源版权归原画师 / 建模师 / miHoYo 所有**。请勿将本项目（含模型）用于任何商业用途。
 
 ### 如何添加 / 替换模型
 
