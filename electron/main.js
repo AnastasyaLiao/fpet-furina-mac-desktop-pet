@@ -1,5 +1,5 @@
 // 桌面宠物 —— Electron 主进程（精简：透明 + 无边框 + 置顶 + 鼠标穿透 + 托盘）
-const { app, BrowserWindow, Tray, Menu, nativeImage, screen, shell, ipcMain, globalShortcut } = require("electron");
+const { app, BrowserWindow, Tray, Menu, nativeImage, screen, shell, ipcMain, globalShortcut, systemPreferences } = require("electron");
 const path = require("path");
 const http = require("http");
 const https = require("https");
@@ -1686,6 +1686,31 @@ function startStaticServer() {
               wpos = win.getPosition();
             }
             res.end(JSON.stringify({ ok: true, workArea: wa, windowSize: wsize, windowPos: wpos }));
+            return;
+          }
+          // ---------- v2.1.0 屏幕感知权限：开启时检查「屏幕录制」权限，未授权则询问并引导去系统设置 ----------
+          if (p === "/api/screen-permission" && req.method === "POST") {
+            let granted = false;
+            try {
+              granted = systemPreferences.getMediaAccessStatus("screen") === "granted";
+            } catch (e) { writeLog("warn", "读取屏幕录制权限状态失败", { error: String(e) }); }
+            if (!granted) {
+              try {
+                const { dialog } = require("electron");
+                dialog.showMessageBox({
+                  type: "info",
+                  title: "屏幕感知需要「屏幕录制」权限",
+                  message: "要开启屏幕感知，需要允许 fpet 读取你的屏幕画面。",
+                  detail: "请放心：本软件不连接任何数据库，所有数据仅在本地处理，只发送给你自己配置的大模型 API，绝不外传。\n\n点击「前往授权」，然后在 系统设置 → 隐私与安全性 → 屏幕录制 中勾选 fpet，之后重新对话即可生效。",
+                  buttons: ["前往授权", "暂不开启"],
+                  defaultId: 0,
+                  cancelId: 1,
+                }).then(({ response }) => {
+                  if (response === 0) shell.openExternal("x-apple.systempreferences:com.apple.preference.security?Privacy_ScreenCapture");
+                }).catch(() => {});
+              } catch (e) {}
+            }
+            res.end(JSON.stringify({ ok: true, granted }));
             return;
           }
           // ---------- 聊天接口：转发到已接入的大模型，并推送给桌宠显示气泡 ----------

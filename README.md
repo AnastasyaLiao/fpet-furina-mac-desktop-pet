@@ -65,6 +65,13 @@ In Settings → LLM section, pick a provider and fill in **your own** config: De
 
 > Security: this app ships **no vendor keys**. Your key is stored only in the local `config.json` and is never committed to the source.
 
+### Privacy & Data Safety
+
+- **Nothing is uploaded to any database / server.** All data (config, chat history, memory, settings and screenshots) is stored and processed **locally** on your machine.
+- The only thing that ever leaves your machine is content you explicitly send to the **LLM provider that you configured yourself** (DeepSeek / Ollama …). Keys and data stay under your control.
+- **Screen awareness is OFF by default.** Screenshots are only captured while you enable it, and you can switch it off anytime or deny access via the macOS Screen Recording permission.
+- **No vendor keys are bundled.** The API key you enter is stored only in the local `config.json`.
+
 ### Model Sources & Copyright
 
 The Live2D models are fan-made free resources of Genshin characters.
@@ -171,6 +178,13 @@ npm run dist     # → dist/fpet-2.1.0-arm64.dmg
 在设置面板「接入大模型」区选择服务商并填写**你自己的**配置：（DeepSeek）填 API Key，可选改接口地址与模型名；（Ollama）填服务地址与本地模型名。点「测试连接」验证、「保存」生效。回复以打字机气泡显示在模型上方，并自动带出表情切换。
 
 > 安全性：本软件**不内置任何厂商密钥**。填入的 Key 仅保存在本机 `config.json`，绝不写入代码，也不会随源码分发。
+
+### 隐私与数据安全（重要说明）
+
+- **数据不会上传到任何数据库 / 服务器**：fpet 所有数据（配置、聊天历史、记忆、设置、屏幕截图等）均在你本机存储与处理。
+- **仅对接你自己配置的大模型 API**：唯一可能离开你电脑的，是你明确发送给你自己填写的模型服务商（DeepSeek / Ollama 等）的对话内容；密钥与数据始终由你掌控。
+- **屏幕感知默认关闭**：仅在开启时才会截取当前屏幕发给所选大模型以辅助回答；可随时关闭，也可通过系统「屏幕录制」权限拒绝访问。
+- **不内置任何厂商密钥**：填写的 API Key 仅保存在本地 `config.json`。
 
 ### 模型来源与版权
 

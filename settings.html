@@ -612,7 +612,7 @@
                     <div class="switch-row">
                         <div>
                             <div class="lbl">屏幕感知（读取当前画面）</div>
-                            <div class="desc">开启后，对话时会把当前屏幕截图一起发给所接入的大模型，让它能“看到”你正在看的代码 / 网页 / 应用，从而更好地理解并回答你（如写代码时读懂你的代码、看网页时读懂页面）。截图仅在本地生成、仅发给你自己配置的大模型，可随时关闭。首次使用需在【系统设置→隐私与安全性→屏幕录制】中允许，建议搭配支持图片的多模态模型使用。</div>
+                            <div class="desc">开启后，对话时会把当前屏幕截图一起发给所接入的大模型，让它能“看到”你正在看的代码 / 网页 / 应用，从而更好地理解并回答你（如写代码时读懂你的代码、看网页时读懂页面）。开启时会询问授权。请放心：本软件<b>不会上传任何数据到任何数据库</b>，所有操作都在本地完成，仅把信息发送给你自己配置的大模型 API。首次使用需在【系统设置→隐私与安全性→屏幕录制】中允许，建议搭配支持图片的多模态模型使用，可随时关闭。</div>
                         </div>
                         <input type="checkbox" id="screenSense" />
                     </div>
@@ -976,6 +976,13 @@
         }
         $("testLLM").addEventListener("click", () => doLLM("test"));
         $("saveLLM").addEventListener("click", () => doLLM("save"));
+
+        // v2.1.0 屏幕感知：勾选开启时询问是否需要「屏幕录制」权限（未授权则由后端弹窗引导授权）
+        $("screenSense").addEventListener("change", (ev) => {
+            if (ev.target.checked) {
+                fetch("/api/screen-permission", { method: "POST" }).catch(() => {});
+            }
+        });
 
         const chatInput = $("chatInput"), chatSend = $("chatSend"), chatlog = $("chatlog");
         function appendChat(role, text) {
